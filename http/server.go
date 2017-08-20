@@ -3,12 +3,14 @@ package http
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"os"
 	"os/signal"
+	"time"
 
 	"github.com/gorilla/mux"
 )
@@ -18,57 +20,68 @@ var (
 	ErrNoServices         = errors.New("no services provided")
 )
 
-// NewServer creates new http server
-// TODO - Add options eg. WithPort...
-// WithLogger etc...
-func NewServer(opts ...ServerOption) *HTTPServer {
-	srvr := HTTPServer{
-		httpSrvr: &http.Server{},
-		router:   mux.NewRouter(),
+// NewServer creates new http server instance
+func NewServer(opts ...ServerOption) *Server {
+	srv := Server{
+		httpServer: &http.Server{
+			ReadTimeout:  5 * time.Second,
+			WriteTimeout: 10 * time.Second,
+			IdleTimeout:  120 * time.Second,
+			// TODO - Make TLS configurable, maybe even options above
+		},
+		mux: mux.NewRouter(),
 	}
+
+	srv.httpServer.Handler = srv.mux
 
 	for _, o := range opts {
-		o(&srvr)
+		o(&srv)
 	}
 
-	if srvr.logger == nil {
-		srvr.logger = log.New(os.Stdout, "http ", log.Ldate|log.Ltime|log.Llongfile)
+	if srv.logger == nil {
+		srv.logger = log.New(os.Stdout, "http ", log.Ldate|log.Ltime|log.Llongfile)
 	}
 
-	if srvr.httpSrvr.Handler == nil {
-		srvr.httpSrvr.Handler = srvr.router
+	if srv.tls {
+		srv.httpServer.TLSConfig = &tls.Config{
+			PreferServerCipherSuites: true,
+			CurvePreferences: []tls.CurveID{
+				tls.CurveP256,
+				tls.X25519,
+			},
+		}
 	}
 
-	return &srvr
+	return &srv
 }
 
-// HTTPServer represents http server implementation
-type HTTPServer struct {
-	httpSrvr *http.Server
-	logger   *log.Logger
-	router   *mux.Router
+// Server represents http server implementation
+type Server struct {
+	httpServer *http.Server
+	logger     *log.Logger
+	tls        bool
+	certFile   string
+	keyFile    string
+	mux        *mux.Router
 }
 
 // Run will start a server listening on a given port
-func (h *HTTPServer) Run(port int) error {
-	h.setupServer(port)
-	return h.run()
-}
-
-func (h *HTTPServer) setupServer(port int) {
+func (s *Server) Run(port int) error {
 	addr := fmt.Sprintf("0.0.0.0:%d", port)
-	h.httpSrvr.Addr = addr
-}
+	s.httpServer.Addr = addr
 
-func (h *HTTPServer) run() error {
-	stop := make(chan os.Signal)
+	stop := make(chan os.Signal, 1)
 	signal.Notify(stop, os.Interrupt, os.Kill)
 
 	var err error
 
 	go func() {
-		h.logger.Printf("Starting server at: %s", h.httpSrvr.Addr)
-		err = h.httpSrvr.ListenAndServe()
+		s.logger.Printf("Starting server at: %s", s.httpServer.Addr)
+		if s.tls {
+			err = s.runTLS()
+		} else {
+			err = s.httpServer.ListenAndServe()
+		}
 	}()
 
 	if err != nil {
@@ -77,31 +90,45 @@ func (h *HTTPServer) run() error {
 
 	<-stop
 
-	h.logger.Println("Server shutting down...")
-	err = h.Stop()
+	s.logger.Println("Server shutting down...")
+	err = s.Stop()
 	if err != nil {
 		return err
 	}
 
-	h.logger.Println("Server stopped.")
+	s.logger.Println("Server stopped.")
 
 	return nil
 }
 
+func (s *Server) runTLS() error {
+	srv := &http.Server{
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 5 * time.Second,
+		Handler: http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Connection", "close")
+			url := "https://" + r.Host + r.URL.String()
+			http.Redirect(w, r, url, http.StatusMovedPermanently)
+		}),
+	}
+	go func() { log.Fatal(srv.ListenAndServe()) }()
+	return s.httpServer.ListenAndServeTLS(s.certFile, s.keyFile)
+}
+
 // Stop attempts to gracefully shutdown the server
-func (h *HTTPServer) Stop() error {
-	return h.httpSrvr.Shutdown(context.Background())
+func (s *Server) Stop() error {
+	return s.httpServer.Shutdown(context.Background())
 }
 
 // RegisterServices registers given http Services with
 // the server and sets up routes
-func (h *HTTPServer) RegisterServices(svcs ...Service) error {
+func (s *Server) RegisterServices(svcs ...Service) error {
 	if svcs == nil {
 		return ErrNoServices
 	}
 
 	for _, svc := range svcs {
-		err := h.RegisterService(svc)
+		err := s.RegisterService(svc)
 		if err != nil {
 			return err
 		}
@@ -112,7 +139,7 @@ func (h *HTTPServer) RegisterServices(svcs ...Service) error {
 
 // RegisterService registers a given http Service with
 // the server and sets up routes
-func (h *HTTPServer) RegisterService(svc Service) error {
+func (s *Server) RegisterService(svc Service) error {
 	endpoints := svc.Endpoints()
 
 	if endpoints == nil {
@@ -121,7 +148,7 @@ func (h *HTTPServer) RegisterService(svc Service) error {
 
 	for path, endpoint := range endpoints {
 		p := fmt.Sprintf("/%s/%s", svc.Prefix(), path)
-		h.router.Handle(p, endpoint.Handler).Methods(endpoint.Methods...)
+		s.mux.Handle(p, endpoint.Handler).Methods(endpoint.Methods...)
 	}
 
 	return nil
