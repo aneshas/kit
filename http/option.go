@@ -2,6 +2,7 @@ package http
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/tonto/kit/http/middleware"
 )
@@ -29,6 +30,13 @@ func WithTLS(cert, key string) ServerOption {
 	return func(s *Server) {
 		s.certFile = cert
 		s.keyFile = key
-		s.tls = true
 	}
 }
+
+func WithHandler(h http.Handler) ServerOption {
+	return func(s *Server) {
+		s.httpServer.Handler = h
+	}
+}
+
+// TODO - Add WithTLSConfig - so you can override the whole config

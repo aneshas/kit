@@ -27,9 +27,8 @@ func NewServer(opts ...ServerOption) *Server {
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 			IdleTimeout:  120 * time.Second,
-			// TODO - Make TLS configurable, maybe even options above
 		},
-		mux: mux.NewRouter(),
+		mux: mux.NewRouter().StrictSlash(true),
 	}
 
 	srv.httpServer.Handler = srv.mux
@@ -42,7 +41,7 @@ func NewServer(opts ...ServerOption) *Server {
 		srv.logger = log.New(os.Stdout, "http ", log.Ldate|log.Ltime|log.Llongfile)
 	}
 
-	if srv.tls {
+	if srv.tlsEnabled() {
 		srv.httpServer.TLSConfig = &tls.Config{
 			PreferServerCipherSuites: true,
 			CurvePreferences: []tls.CurveID{
@@ -59,7 +58,6 @@ func NewServer(opts ...ServerOption) *Server {
 type Server struct {
 	httpServer *http.Server
 	logger     *log.Logger
-	tls        bool
 	certFile   string
 	keyFile    string
 	mux        *mux.Router
@@ -77,7 +75,7 @@ func (s *Server) Run(port int) error {
 
 	go func() {
 		s.logger.Printf("Starting server at: %s", s.httpServer.Addr)
-		if s.tls {
+		if s.tlsEnabled() {
 			err = s.runTLS()
 		} else {
 			err = s.httpServer.ListenAndServe()
@@ -99,6 +97,10 @@ func (s *Server) Run(port int) error {
 	s.logger.Println("Server stopped.")
 
 	return nil
+}
+
+func (s *Server) tlsEnabled() bool {
+	return (s.certFile != "" && s.keyFile != "")
 }
 
 func (s *Server) runTLS() error {
@@ -147,8 +149,16 @@ func (s *Server) RegisterService(svc Service) error {
 	}
 
 	for path, endpoint := range endpoints {
-		p := fmt.Sprintf("/%s/%s", svc.Prefix(), path)
-		s.mux.Handle(p, endpoint.Handler).Methods(endpoint.Methods...)
+		if path == "/" {
+			path = ""
+		} else {
+			path = "/" + path
+		}
+		p := fmt.Sprintf("/%s%s", svc.Prefix(), path)
+		route := s.mux.Handle(p, endpoint.Handler)
+		if endpoint.Methods != nil {
+			route.Methods(endpoint.Methods...)
+		}
 	}
 
 	return nil
