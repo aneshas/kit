@@ -31,6 +31,8 @@ func NewServer(opts ...ServerOption) *Server {
 		mux: mux.NewRouter().StrictSlash(true),
 	}
 
+	srv.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
+
 	srv.httpServer.Handler = srv.mux
 
 	for _, o := range opts {
