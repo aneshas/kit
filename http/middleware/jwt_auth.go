@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	respond "gopkg.in/matryer/respond.v1"
+	"github.com/tonto/kit/http/respond"
 )
 
 // Authorizer represents authorization domain service interface
