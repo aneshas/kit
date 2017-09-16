@@ -21,4 +21,4 @@ type Endpoint struct {
 }
 
 // Endpoints represents a map of service endpoints
-type Endpoints map[string]Endpoint
+type Endpoints map[string]*Endpoint

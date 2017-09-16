@@ -27,8 +27,8 @@ func (b *BaseService) Prefix() string {
 
 // Endpoints returns all registered endpoints (implements Service interface)
 func (b *BaseService) Endpoints() Endpoints {
-	for i := range b.endpoints {
-		b.endpoints[i].Handler = middleware.Adapt(b.endpoints[i].Handler, b.mw)
+	for _, e := range b.endpoints {
+		e.Handler = middleware.Adapt(e.Handler, b.mw...)
 	}
 	return b.endpoints
 }
@@ -36,9 +36,9 @@ func (b *BaseService) Endpoints() Endpoints {
 // RegisterEndpoint is a helper method that registers service endpoint
 func (b *BaseService) RegisterEndpoint(path string, h http.Handler, methods ...string) {
 	if b.endpoints == nil {
-		b.endpoints = make(map[string]Endpoint)
+		b.endpoints = make(map[string]*Endpoint)
 	}
-	b.endpoints[path] = Endpoint{
+	b.endpoints[path] = &Endpoint{
 		Methods: methods,
 		Handler: h,
 	}
