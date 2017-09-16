@@ -44,9 +44,9 @@ func (b *BaseService) RegisterEndpoint(path string, h http.Handler, methods ...s
 	}
 }
 
-// RegisterMiddlewares is a helper method that registers provided middlewares
+// RegisterMiddleware is a helper method that registers provided middlewares
 // for service wide usage, ie. provided middlewares are applied to all endpoints
-func (b *BaseService) RegisterMiddlewares(mw ...middleware.Adapter) {
+func (b *BaseService) RegisterMiddleware(mw ...middleware.Adapter) {
 	b.mw = mw
 }
 
