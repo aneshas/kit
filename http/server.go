@@ -4,7 +4,6 @@ package http
 import (
 	"context"
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -13,11 +12,6 @@ import (
 	"time"
 
 	"github.com/gorilla/mux"
-)
-
-var (
-	ErrNoEndpointsDefined = errors.New("service has no endpoints defined")
-	ErrNoServices         = errors.New("no services provided")
 )
 
 // NewServer creates new http server instance
@@ -32,7 +26,6 @@ func NewServer(opts ...ServerOption) *Server {
 	}
 
 	srv.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
-
 	srv.httpServer.Handler = srv.mux
 
 	for _, o := range opts {
@@ -128,7 +121,7 @@ func (s *Server) Stop() error {
 // the server and sets up routes
 func (s *Server) RegisterServices(svcs ...Service) error {
 	if svcs == nil {
-		return ErrNoServices
+		return fmt.Errorf("no services provided")
 	}
 
 	for _, svc := range svcs {
@@ -147,16 +140,15 @@ func (s *Server) RegisterService(svc Service) error {
 	endpoints := svc.Endpoints()
 
 	if endpoints == nil {
-		return ErrNoEndpointsDefined
+		return fmt.Errorf("service has no endpoints defined")
 	}
 
 	for path, endpoint := range endpoints {
+		ep := "/" + path
 		if path == "/" {
-			path = ""
-		} else {
-			path = "/" + path
+			ep = ""
 		}
-		p := fmt.Sprintf("/%s%s", svc.Prefix(), path)
+		p := fmt.Sprintf("/%s%s", svc.Prefix(), ep)
 		route := s.mux.Handle(p, endpoint.Handler)
 		if endpoint.Methods != nil {
 			route.Methods(endpoint.Methods...)

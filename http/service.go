@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"reflect"
 
+	"github.com/tonto/kit/http/middleware"
+
 	"github.com/tonto/kit/http/respond"
 )
 
@@ -12,30 +14,40 @@ type validator interface {
 	Validate() error
 }
 
+// BaseService represents base http service
 type BaseService struct {
 	endpoints Endpoints
+	mw        []middleware.Adapter
 }
 
-// Prefix returns service routing prefix
+// Prefix returns service routing prefix (implements Service interface)
 func (b *BaseService) Prefix() string {
-	return ""
+	return "/"
 }
 
-// Endpoints returns all registered endpoints
+// Endpoints returns all registered endpoints (implements Service interface)
 func (b *BaseService) Endpoints() Endpoints {
+	for i := range b.endpoints {
+		b.endpoints[i].Handler = middleware.Adapt(b.endpoints[i].Handler, b.mw)
+	}
 	return b.endpoints
 }
 
-// RegisterEndpoint registeres service endpoint
+// RegisterEndpoint is a helper method that registers service endpoint
 func (b *BaseService) RegisterEndpoint(path string, h http.Handler, methods ...string) {
 	if b.endpoints == nil {
 		b.endpoints = make(map[string]Endpoint)
 	}
-
 	b.endpoints[path] = Endpoint{
 		Methods: methods,
 		Handler: h,
 	}
+}
+
+// RegisterMiddlewares is a helper method that registers provided middlewares
+// for service wide usage, ie. provided middlewares are applied to all endpoints
+func (b *BaseService) RegisterMiddlewares(mw ...middleware.Adapter) {
+	b.mw = mw
 }
 
 // HandlerFromMethod creates new handler from a given service method.
