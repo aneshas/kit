@@ -9,14 +9,9 @@ import (
 	"github.com/tonto/kit/http/respond"
 )
 
-// Authorizer represents authorization domain service interface
-type Authorizer interface {
-	Authorize(context.Context, string) error
-}
-
-// WithJWTAuthMethod represents http authentication middleware
-// It uses authorizer domain service to check for valid session
-func WithJWTAuthMethod(j Authorizer) Adapter {
+// WithTokenAuth represents http authentication middleware
+// It uses auth func to check for valid session
+func WithTokenAuth(af func(context.Context, string) error) Adapter {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ah := r.Header.Get("Authorization")
@@ -31,7 +26,7 @@ func WithJWTAuthMethod(j Authorizer) Adapter {
 				return
 			}
 
-			if err := j.Authorize(context.Background(), s[1]); err != nil {
+			if err := af(context.Background(), s[1]); err != nil {
 				respond.With(w, r, http.StatusUnauthorized, fmt.Errorf("unauthorized: %v", err))
 				return
 			}
