@@ -25,6 +25,10 @@ func NewServer(opts ...ServerOption) *Server {
 		mux: mux.NewRouter().StrictSlash(true),
 	}
 
+	if srv.notFoundHandler != nil {
+		srv.mux.NotFoundHandler = srv.notFoundHandler
+	}
+
 	srv.mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) { w.WriteHeader(http.StatusOK) })
 	srv.httpServer.Handler = srv.mux
 
@@ -51,11 +55,12 @@ func NewServer(opts ...ServerOption) *Server {
 
 // Server represents http server implementation
 type Server struct {
-	httpServer *http.Server
-	logger     *log.Logger
-	certFile   string
-	keyFile    string
-	mux        *mux.Router
+	httpServer      *http.Server
+	logger          *log.Logger
+	certFile        string
+	keyFile         string
+	mux             *mux.Router
+	notFoundHandler http.Handler
 }
 
 // Run will start a server listening on a given port

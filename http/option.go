@@ -39,4 +39,10 @@ func WithHandler(h http.Handler) ServerOption {
 	}
 }
 
+func WithNotFoundHandler(h http.Handler) ServerOption {
+	return func(s *Server) {
+		s.notFoundHandler = h
+	}
+}
+
 // TODO - Add WithTLSConfig - so you can override the whole config
