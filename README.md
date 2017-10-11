@@ -1,2 +1,2 @@
 # kit
-My commonly used packages accros server based projects
+My commonly used packages accross server based projects
