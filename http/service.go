@@ -63,7 +63,7 @@ func (b *BaseService) HandlerFromMethod(m interface{}) http.Handler {
 
 		err := json.NewDecoder(r.Body).Decode(req)
 		if err != nil {
-			w.WriteHeader(http.StatusBadRequest)
+			respond.With(w, r, http.StatusBadRequest, err)
 			return
 		}
 
