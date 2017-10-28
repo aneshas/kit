@@ -1,7 +1,8 @@
-// Package errors provides http error functionality
+// Package errors provides kit http error functionality
 package errors
 
 // Wrap wraps provided err and http response code
+// thus creating new http error
 func Wrap(err error, code int) *Error {
 	return &Error{
 		code: code,

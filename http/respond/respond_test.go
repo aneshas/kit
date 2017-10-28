@@ -22,8 +22,8 @@ func TestWithJSON(t *testing.T) {
 		{
 			name: "test response success",
 			resp: http.NewResponse(
-				gohttp.StatusOK,
 				jresp{Foo: "val", Bar: 3},
+				gohttp.StatusOK,
 			),
 			want:     `{"code":200,"data":{"foo":"val","bar":3}}`,
 			wantCode: gohttp.StatusOK,

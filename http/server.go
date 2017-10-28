@@ -1,4 +1,3 @@
-// Package server provides common http server functionality
 package http
 
 import (
@@ -9,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -37,7 +37,7 @@ func NewServer(opts ...ServerOption) *Server {
 	}
 
 	if srv.logger == nil {
-		srv.logger = log.New(os.Stdout, "http ", log.Ldate|log.Ltime|log.Llongfile)
+		srv.logger = log.New(os.Stdout, "kit/http =>", log.Ldate|log.Ltime|log.Llongfile)
 	}
 
 	if srv.tlsEnabled() {
@@ -53,9 +53,10 @@ func NewServer(opts ...ServerOption) *Server {
 	return &srv
 }
 
-// Server represents http server implementation
+// Server represents kit http server
 type Server struct {
 	httpServer      *http.Server
+	adapters        []Adapter
 	logger          *log.Logger
 	certFile        string
 	keyFile         string
@@ -149,16 +150,29 @@ func (s *Server) RegisterService(svc Service) error {
 	}
 
 	for path, endpoint := range endpoints {
-		ep := "/" + path
-		if path == "/" {
-			ep = ""
-		}
-		p := fmt.Sprintf("/%s%s", svc.Prefix(), ep)
-		route := s.mux.Handle(p, endpoint.Handler)
+		hfunc := endpoint.Handler
+		hfunc = AdaptHandlerFunc(hfunc, s.adapters...)
+
+		route := s.mux.HandleFunc(
+			s.getPath(path, svc.Prefix()),
+			func(w http.ResponseWriter, r *http.Request) {
+				// TODO - Provide a sensible default context
+				// eg. timeouts, values ???
+				hfunc(context.Background(), w, r)
+			},
+		)
+
 		if endpoint.Methods != nil {
 			route.Methods(endpoint.Methods...)
 		}
 	}
 
 	return nil
+}
+
+func (s *Server) getPath(path string, prefix string) string {
+	if path == "/" {
+		path = ""
+	}
+	return fmt.Sprintf("/%s%s", prefix, strings.TrimRight(path, "/"))
 }

@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"sync"
 
 	"github.com/tonto/kit/http/errors"
-	"github.com/tonto/kit/http/middleware"
 	"github.com/tonto/kit/http/respond"
 )
 
@@ -18,15 +18,18 @@ type validator interface {
 
 // BaseService represents base http service
 type BaseService struct {
+	m         sync.Mutex
 	endpoints Endpoints
-	mw        []middleware.Adapter
+	mw        []Adapter
 }
 
 // Prefix returns service routing prefix
 func (b *BaseService) Prefix() string { return "/" }
 
-// RegisterHandler is a helper method that registers service endpoint handler
-func (b *BaseService) RegisterHandler(verb string, path string, h http.Handler) {
+// RegisterHandler is a helper method that registers service HandlerFunc
+// Service HandlerFunc is an extension of http.HandlerFunc which only adds context.Context
+// as first parameter, the rest stays the same
+func (b *BaseService) RegisterHandler(verb string, path string, h HandlerFunc) {
 	if b.endpoints == nil {
 		b.endpoints = make(map[string]*Endpoint)
 	}
@@ -36,9 +39,10 @@ func (b *BaseService) RegisterHandler(verb string, path string, h http.Handler) 
 	}
 }
 
-// RegisterEndpoint is a helper method that registers service endpoint
-// method should have a following signature:
+// RegisterEndpoint is a helper method that registers service json endpoint
+// JSON endpoint method should have the following signature:
 // func(c context.Context, w http.ResponseWriter, r *http.Request, req *CustomeType) (*http.Response, error)
+// where *CustomType is your custom request type to which r.Body will be json unmarshalled automatically
 func (b *BaseService) RegisterEndpoint(verb string, path string, method interface{}) error {
 	h, err := b.handlerFromMethod(method)
 	if err != nil {
@@ -57,16 +61,19 @@ func (b *BaseService) RegisterEndpoint(verb string, path string, method interfac
 	return nil
 }
 
-func (b *BaseService) handlerFromMethod(m interface{}) (http.Handler, error) {
+func (b *BaseService) handlerFromMethod(m interface{}) (HandlerFunc, error) {
 	err := b.checkMtdSig(m)
 	if err != nil {
 		return nil, err
 	}
 
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(c context.Context, w http.ResponseWriter, r *http.Request) {
 		req, err := b.decodeReq(r, m)
 		if err != nil {
-			fmt.Fprintf(w, "internal error - could not decode request")
+			respond.WithJSON(
+				w, r,
+				errors.Wrap(fmt.Errorf("internal error: could not decode request"), http.StatusBadRequest),
+			)
 			return
 		}
 
@@ -80,7 +87,7 @@ func (b *BaseService) handlerFromMethod(m interface{}) (http.Handler, error) {
 
 		v := reflect.ValueOf(m)
 		ret := v.Call([]reflect.Value{
-			reflect.ValueOf(context.Background()),
+			reflect.ValueOf(c),
 			reflect.ValueOf(w),
 			reflect.ValueOf(r),
 			reflect.ValueOf(req),
@@ -92,13 +99,13 @@ func (b *BaseService) handlerFromMethod(m interface{}) (http.Handler, error) {
 		}
 
 		if ret[0].IsNil() {
-			respond.WithJSON(w, r, NewResponse(http.StatusOK, nil))
+			respond.WithJSON(w, r, NewResponse(nil, http.StatusOK))
 			return
 		}
 
 		resp := ret[0].Interface().(*Response)
 		respond.WithJSON(w, r, resp)
-	}), nil
+	}, nil
 }
 
 func (b *BaseService) checkMtdSig(m interface{}) error {
@@ -144,7 +151,6 @@ func (b *BaseService) decodeReq(r *http.Request, m interface{}) (interface{}, er
 
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {
-		// respond.With(w, r, http.StatusBadRequest, err)
 		return nil, fmt.Errorf("error decoding json")
 	}
 
@@ -163,12 +169,11 @@ func (b *BaseService) writeError(w http.ResponseWriter, r *http.Request, e inter
 func (b *BaseService) Endpoints() Endpoints {
 	for _, e := range b.endpoints {
 		if b.mw != nil {
-			e.Handler = middleware.Adapt(e.Handler, b.mw...)
+			e.Handler = AdaptHandlerFunc(e.Handler, b.mw...)
 		}
 	}
 	return b.endpoints
 }
 
-// RegisterMiddleware is a helper method that registers provided middlewares
-// for service wide usage, ie. provided middlewares are applied to all endpoints
-func (b *BaseService) RegisterMiddleware(mw ...middleware.Adapter) { b.mw = mw }
+// Adapt is used to adapt the service with provided adapters
+func (b *BaseService) Adapt(mw ...Adapter) { b.mw = mw }
