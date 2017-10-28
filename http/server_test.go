@@ -10,7 +10,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/tonto/kit/http"
-	"github.com/tonto/kit/http/errors"
 	"github.com/tonto/kit/http/respond"
 )
 
@@ -228,5 +227,5 @@ func (s *hsvc) postEndpointGErr(c context.Context, w gohttp.ResponseWriter, r *g
 }
 
 func (s *hsvc) postEndpointHErr(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, rq *req) (*http.Response, error) {
-	return nil, errors.Wrap(fmt.Errorf("endpoint error"), gohttp.StatusBadRequest)
+	return nil, http.WrapError(fmt.Errorf("endpoint error"), gohttp.StatusBadRequest)
 }

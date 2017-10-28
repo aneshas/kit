@@ -1,7 +1,5 @@
-// Package http provides, commonly used http functionality such as:
-// - HTTP Server with lifecycle control (start, stop, status logging...)
-// - Easy HTTP Service registration and routing
-// - Commonly used middleware implementations
+// Package http provides HTTP server implementation with server lifecycle control, commonly used
+// adapters, easy service registration and response/error handling, tls support...
 package http
 
 import (

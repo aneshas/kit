@@ -8,7 +8,6 @@ import (
 	"reflect"
 	"sync"
 
-	"github.com/tonto/kit/http/errors"
 	"github.com/tonto/kit/http/respond"
 )
 
@@ -72,7 +71,7 @@ func (b *BaseService) handlerFromMethod(m interface{}) (HandlerFunc, error) {
 		if err != nil {
 			respond.WithJSON(
 				w, r,
-				errors.Wrap(fmt.Errorf("internal error: could not decode request"), http.StatusBadRequest),
+				WrapError(fmt.Errorf("internal error: could not decode request"), http.StatusBadRequest),
 			)
 			return
 		}
@@ -158,11 +157,11 @@ func (b *BaseService) decodeReq(r *http.Request, m interface{}) (interface{}, er
 }
 
 func (b *BaseService) writeError(w http.ResponseWriter, r *http.Request, e interface{}) {
-	if _, ok := e.(*errors.Error); ok {
+	if _, ok := e.(*Error); ok {
 		respond.WithJSON(w, r, e)
 		return
 	}
-	respond.WithJSON(w, r, errors.Wrap(e.(error), http.StatusInternalServerError))
+	respond.WithJSON(w, r, WrapError(e.(error), http.StatusInternalServerError))
 }
 
 // Endpoints returns all registered endpoints

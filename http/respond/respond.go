@@ -6,7 +6,7 @@ import (
 	gohttp "net/http"
 )
 
-var marshalError = `{"errors":["request was successfull but we were unable to encode the response."]}`
+var marshalError = `{"code":500,"errors":["request was successfull but we were unable to encode the response."]}`
 
 type response struct {
 	Code   int         `json:"code"`
@@ -33,36 +33,54 @@ func WithJSON(w gohttp.ResponseWriter, r *gohttp.Request, resp interface{}) {
 	hresp, ok := resp.(httpResponse)
 	if ok {
 		writeResponse(w, hresp)
+		return
 	}
 
 	herr, ok := resp.(httpError)
 	if ok {
 		writeError(w, herr)
+		return
 	}
+
+	w.WriteHeader(gohttp.StatusOK)
+	w.Write(
+		encodeResp(
+			response{
+				Code: gohttp.StatusOK,
+				Data: resp,
+			},
+		),
+	)
 }
 
 func writeResponse(w gohttp.ResponseWriter, resp httpResponse) {
 	w.WriteHeader(resp.Code())
-	jresp := response{
-		Code: resp.Code(),
-		Data: resp.Body(),
-	}
-	data, err := json.Marshal(jresp)
-	if err != nil {
-		w.Write([]byte(marshalError))
-	}
-	w.Write(data)
+	w.Write(
+		encodeResp(
+			response{
+				Code: resp.Code(),
+				Data: resp.Body(),
+			},
+		),
+	)
 }
 
 func writeError(w gohttp.ResponseWriter, e httpError) {
 	w.WriteHeader(e.Code())
-	jresp := response{
-		Code:   e.Code(),
-		Errors: []string{e.Err().Error()},
-	}
-	data, err := json.Marshal(jresp)
+	w.Write(
+		encodeResp(
+			response{
+				Code:   e.Code(),
+				Errors: []string{e.Err().Error()},
+			},
+		),
+	)
+}
+
+func encodeResp(resp interface{}) []byte {
+	data, err := json.Marshal(resp)
 	if err != nil {
-		w.Write([]byte(marshalError))
+		return []byte(marshalError)
 	}
-	w.Write(data)
+	return data
 }

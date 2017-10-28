@@ -12,7 +12,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/tonto/kit/http"
-	"github.com/tonto/kit/http/errors"
 )
 
 type svc struct {
@@ -255,7 +254,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			path: "/svc",
 			req:  req{ID: 1, Name: "John"},
 			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) (*http.Response, error) {
-				return nil, errors.Wrap(fmt.Errorf("endpoint error"), gohttp.StatusBadRequest)
+				return nil, http.WrapError(fmt.Errorf("endpoint error"), gohttp.StatusBadRequest)
 			},
 			want:     `{"code":400,"errors":["endpoint error"]}`,
 			wantCode: gohttp.StatusBadRequest,
