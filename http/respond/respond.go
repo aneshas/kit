@@ -43,6 +43,12 @@ func WithJSON(w gohttp.ResponseWriter, r *gohttp.Request, resp interface{}) {
 		return
 	}
 
+	err, ok := resp.(error)
+	if ok {
+		writeSimpleError(w, err)
+		return
+	}
+
 	w.WriteHeader(gohttp.StatusOK)
 	writeJSON(
 		w,
@@ -71,6 +77,17 @@ func writeError(w gohttp.ResponseWriter, e httpError) {
 		response{
 			Code:   e.Code(),
 			Errors: []string{e.Err().Error()},
+		},
+	)
+}
+
+func writeSimpleError(w gohttp.ResponseWriter, err error) {
+	w.WriteHeader(gohttp.StatusInternalServerError)
+	writeJSON(
+		w,
+		response{
+			Code:   gohttp.StatusInternalServerError,
+			Errors: []string{err.Error()},
 		},
 	)
 }

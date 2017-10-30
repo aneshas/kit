@@ -16,6 +16,7 @@ func TestWithJSON(t *testing.T) {
 		name       string
 		resp       interface{}
 		simpleResp string
+		simpleErr  error
 		want       string
 		wantCode   int
 	}{
@@ -33,6 +34,12 @@ func TestWithJSON(t *testing.T) {
 			simpleResp: "simple response",
 			want:       `{"code":200,"data":"simple response"}`,
 			wantCode:   gohttp.StatusOK,
+		},
+		{
+			name:      "test simple err success",
+			simpleErr: fmt.Errorf("simple error"),
+			want:      `{"code":500,"errors":["simple error"]}`,
+			wantCode:  gohttp.StatusInternalServerError,
 		},
 		{
 			name: "test err success",
@@ -59,8 +66,10 @@ func TestWithJSON(t *testing.T) {
 			w := httptest.NewRecorder()
 			if c.resp != nil {
 				respond.WithJSON(w, &gohttp.Request{}, c.resp)
-			} else {
+			} else if c.simpleResp != "" {
 				respond.WithJSON(w, &gohttp.Request{}, c.simpleResp)
+			} else {
+				respond.WithJSON(w, &gohttp.Request{}, c.simpleErr)
 			}
 			assert.Equal(t, c.want+"\n", string(w.Body.Bytes()))
 			assert.Equal(t, c.wantCode, w.Code)
