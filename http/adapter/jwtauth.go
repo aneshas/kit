@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/tonto/kit/http"
-	"github.com/tonto/kit/http/errors"
 	"github.com/tonto/kit/http/respond"
 	jwt "gopkg.in/dgrijalva/jwt-go.v3"
 )
@@ -18,7 +17,7 @@ import (
 // business auth check based on the token itself and claims extracted from it
 // Actuall AuthCallbackFunc implementors should return error
 // upon failed auth check or nil on success
-type AuthCallbackFunc func(context.Context, string, map[string]interface{}) error
+type AuthCallbackFunc func(context.Context, string, map[string]interface{}) error 
 
 // WithJWTAuth represents http authentication middleware
 // It uses auth func to check for valid session
@@ -33,7 +32,7 @@ func WithJWTAuth(callback AuthCallbackFunc) http.Adapter {
 			if ah == "" {
 				respond.WithJSON(
 					w, r,
-					errors.Wrap(fmt.Errorf("no authorization header found"), gohttp.StatusBadRequest),
+					http.WrapError(fmt.Errorf("no authorization header found"), gohttp.StatusBadRequest),
 				)
 				return
 			}
@@ -42,7 +41,7 @@ func WithJWTAuth(callback AuthCallbackFunc) http.Adapter {
 			if len(s) < 2 || s[1] == "" {
 				respond.WithJSON(
 					w, r,
-					errors.Wrap(fmt.Errorf("no bearer token found"), gohttp.StatusBadRequest),
+					http.WrapError(fmt.Errorf("no bearer token found"), gohttp.StatusBadRequest),
 				)
 				return
 			}
@@ -58,7 +57,7 @@ func WithJWTAuth(callback AuthCallbackFunc) http.Adapter {
 			if err := callback(context.Background(), token, claims); err != nil {
 				respond.WithJSON(
 					w, r,
-					errors.Wrap(fmt.Errorf("unauthorized: %v", err), gohttp.StatusUnauthorized),
+					http.WrapError(fmt.Errorf("unauthorized: %v", err), gohttp.StatusUnauthorized),
 				)
 				return
 			}

@@ -222,12 +222,50 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			},
 		},
 		{
-			name:    "test num ret",
+			name:    "test ret no err",
 			verb:    "POST",
 			path:    "/svc",
 			wantErr: true,
 			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) *http.Response {
 				return nil
+			},
+		},
+		{
+			name:    "test no ret",
+			verb:    "POST",
+			path:    "/svc",
+			wantErr: true,
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) {
+			},
+		},
+		{
+			name:     "test nil err ret",
+			verb:     "POST",
+			path:     "/svc",
+			want:     `{"code":200}`,
+			wantCode: gohttp.StatusOK,
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) error {
+				return nil
+			},
+		},
+		{
+			name:     "test err ret",
+			verb:     "POST",
+			path:     "/svc",
+			want:     `{"code":500,"errors":["foo err"]}`,
+			wantCode: gohttp.StatusInternalServerError,
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) error {
+				return fmt.Errorf("foo err")
+			},
+		},
+		{
+			name:     "test http err ret",
+			verb:     "POST",
+			path:     "/svc",
+			want:     `{"code":400,"errors":["foo err"]}`,
+			wantCode: gohttp.StatusBadRequest,
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) error {
+				return http.WrapError(fmt.Errorf("foo err"), gohttp.StatusBadRequest)
 			},
 		},
 		{
@@ -281,6 +319,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			want:     `{"code":200}`,
 			wantCode: gohttp.StatusOK,
 		},
+
 		// TODO - Test Validation (Add Validate to *req) and err paths
 	}
 
@@ -309,7 +348,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 				body, _ := json.Marshal(c.req)
 				req, _ := gohttp.NewRequest(c.verb, "/svc", bytes.NewReader(body))
 				ep.Handler(context.Background(), w, req)
-				assert.Equal(t, c.want, string(w.Body.Bytes()))
+				assert.Equal(t, c.want+"\n", string(w.Body.Bytes()))
 			}
 		})
 	}

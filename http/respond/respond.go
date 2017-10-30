@@ -3,6 +3,7 @@ package respond
 
 import (
 	"encoding/json"
+	"io"
 	gohttp "net/http"
 )
 
@@ -43,44 +44,39 @@ func WithJSON(w gohttp.ResponseWriter, r *gohttp.Request, resp interface{}) {
 	}
 
 	w.WriteHeader(gohttp.StatusOK)
-	w.Write(
-		encodeResp(
-			response{
-				Code: gohttp.StatusOK,
-				Data: resp,
-			},
-		),
+	writeJSON(
+		w,
+		response{
+			Code: gohttp.StatusOK,
+			Data: resp,
+		},
 	)
 }
 
 func writeResponse(w gohttp.ResponseWriter, resp httpResponse) {
 	w.WriteHeader(resp.Code())
-	w.Write(
-		encodeResp(
-			response{
-				Code: resp.Code(),
-				Data: resp.Body(),
-			},
-		),
+	writeJSON(
+		w,
+		response{
+			Code: resp.Code(),
+			Data: resp.Body(),
+		},
 	)
 }
 
 func writeError(w gohttp.ResponseWriter, e httpError) {
 	w.WriteHeader(e.Code())
-	w.Write(
-		encodeResp(
-			response{
-				Code:   e.Code(),
-				Errors: []string{e.Err().Error()},
-			},
-		),
+	writeJSON(
+		w,
+		response{
+			Code:   e.Code(),
+			Errors: []string{e.Err().Error()},
+		},
 	)
 }
 
-func encodeResp(resp interface{}) []byte {
-	data, err := json.Marshal(resp)
-	if err != nil {
-		return []byte(marshalError)
+func writeJSON(w io.Writer, resp interface{}) {
+	if err := json.NewEncoder(w).Encode(&resp); err != nil {
+		w.Write([]byte(marshalError + "\n"))
 	}
-	return data
 }

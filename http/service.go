@@ -92,6 +92,15 @@ func (b *BaseService) handlerFromMethod(m interface{}) (HandlerFunc, error) {
 			reflect.ValueOf(req),
 		})
 
+		if len(ret) == 1 {
+			if !ret[0].IsNil() {
+				b.writeError(w, r, ret[0].Interface())
+				return
+			}
+			respond.WithJSON(w, r, NewResponse(nil, http.StatusOK))
+			return
+		}
+
 		if !ret[1].IsNil() {
 			b.writeError(w, r, ret[1].Interface())
 			return
@@ -114,8 +123,24 @@ func (b *BaseService) checkMtdSig(m interface{}) error {
 		return fmt.Errorf("incorrect endpoint signature (must have 4 params - refer to docs)")
 	}
 
-	if t.NumOut() != 2 {
-		return fmt.Errorf("incorrect endpoint signature (must have 2 ret vals - refer to docs)")
+	if t.NumOut() > 2 || t.NumOut() < 1 {
+		return fmt.Errorf("endpoint must return one or two values")
+	}
+
+	if t.NumOut() == 1 {
+		if !t.Out(0).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
+			return fmt.Errorf("single endpoint return value must implement error interface")
+		}
+	}
+
+	if t.NumOut() == 2 {
+		if t.Out(0) != reflect.TypeOf(&Response{}) {
+			return fmt.Errorf("first ret value must be of type *kit/http/Response")
+		}
+
+		if !t.Out(1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
+			return fmt.Errorf("second ret value must implement error interface")
+		}
 	}
 
 	if !t.In(0).Implements(reflect.TypeOf((*context.Context)(nil)).Elem()) {
@@ -129,15 +154,6 @@ func (b *BaseService) checkMtdSig(m interface{}) error {
 	if t.In(2) != reflect.TypeOf(&http.Request{}) {
 		return fmt.Errorf("param three must be of type *http.Request")
 	}
-
-	if t.Out(0) != reflect.TypeOf(&Response{}) {
-		return fmt.Errorf("first ret value must be of type *kit/http/Response")
-	}
-
-	if !t.Out(1).Implements(reflect.TypeOf((*error)(nil)).Elem()) {
-		return fmt.Errorf("second ret value must implement error interface")
-	}
-
 	return nil
 }
 

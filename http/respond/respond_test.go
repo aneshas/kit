@@ -62,10 +62,16 @@ func TestWithJSON(t *testing.T) {
 			} else {
 				respond.WithJSON(w, &gohttp.Request{}, c.simpleResp)
 			}
-			assert.Equal(t, c.want, string(w.Body.Bytes()))
+			assert.Equal(t, c.want+"\n", string(w.Body.Bytes()))
 			assert.Equal(t, c.wantCode, w.Code)
 		})
 	}
+}
+
+type response struct {
+	Code   int      `json:"code"`
+	Data   jresp    `json:"data,omitempty"`
+	Errors []string `json:"errors,omitempty"`
 }
 
 type jresp struct {
