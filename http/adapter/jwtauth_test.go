@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log"
 	gohttp "net/http"
 	"net/http/httptest"
 	"testing"
@@ -137,7 +136,6 @@ func TestWithJWTAuth(t *testing.T) {
 				c.key,
 				c.tokenKey,
 				func(ctx context.Context, token string, claims map[string]interface{}) error {
-					log.Println(claims)
 					c := c
 					if c.claims != nil {
 						for claim, val := range c.claims {
