@@ -50,3 +50,14 @@ func (r *Response) Code() int { return r.code }
 
 // Body returns associated response body
 func (r *Response) Body() interface{} { return r.body }
+
+const contextReqKey = "tonto_http_request_key"
+
+// ReqFromCtx returns http request associated with context
+// (used with endpoints)
+func ReqFromCtx(c context.Context) *http.Request {
+	if r, ok := c.Value(contextReqKey).(*http.Request); ok {
+		return r
+	}
+	return nil
+}

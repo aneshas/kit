@@ -56,7 +56,7 @@ func TestWithJSON(t *testing.T) {
 				jresp{Foo: "error", Bar: 3},
 				gohttp.StatusOK,
 			),
-			want:     `{"code":500,"errors":["request was successfull but we were unable to encode the response."]}`,
+			want:     `{"code":500,"errors":["request was successful but we were unable to encode the response."]}`,
 			wantCode: gohttp.StatusOK,
 		},
 	}

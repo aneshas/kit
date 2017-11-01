@@ -13,7 +13,7 @@ import (
 
 // AuthCallbackFunc represents auth callback that needs to be
 // passed in to JWTAuth middleware. This func is called after token
-// has been succesfully verified by adapter so client can do additional
+// has been successfully verified by adapter so client can do additional
 // business auth check based on the token itself and claims extracted from it
 // Actuall AuthCallbackFunc implementors should return error
 // upon failed auth check or nil on success
@@ -21,6 +21,9 @@ type AuthCallbackFunc func(context.Context, string, map[string]interface{}) erro
 
 // JWTAlg represents token signing alg type
 type JWTAlg *jwt.SigningMethodHMAC
+
+// JWTTokenKey is used to store token to context
+const JWTTokenKey = "tonto_http_token_key"
 
 var (
 	// JWTAlgHS256 represents HMAC SHA256 token signing alg
@@ -36,8 +39,8 @@ var (
 // WithJWTAuth represents jwt authentication adapter
 // It looks for bearer token in Authorization header, and if
 // found tries to validate it against provided alg and key, if
-// successfull callback func is called to perform client side auth check.
-func WithJWTAuth(alg JWTAlg, key []byte, tkey string, callback AuthCallbackFunc) http.Adapter {
+// successful callback func is called to perform client side auth check.
+func WithJWTAuth(alg JWTAlg, key []byte, callback AuthCallbackFunc) http.Adapter {
 	return func(h http.HandlerFunc) http.HandlerFunc {
 		return func(ctx context.Context, w gohttp.ResponseWriter, r *gohttp.Request) {
 			ah := r.Header.Get("Authorization")
@@ -74,7 +77,7 @@ func WithJWTAuth(alg JWTAlg, key []byte, tkey string, callback AuthCallbackFunc)
 				return
 			}
 
-			h(context.WithValue(ctx, tkey, token), w, r)
+			h(context.WithValue(ctx, JWTTokenKey, token), w, r)
 		}
 	}
 }

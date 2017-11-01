@@ -212,20 +212,20 @@ func (s *hsvc) postHandlerApt(c context.Context, w gohttp.ResponseWriter, r *goh
 	respond.WithJSON(w, r, http.NewResponse(resp{ID: req.ID, Name: msg1 + msg2 + req.Name}, gohttp.StatusOK))
 }
 
-func (s *hsvc) postEndpoint(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, rq *req) (*http.Response, error) {
+func (s *hsvc) postEndpoint(c context.Context, w gohttp.ResponseWriter, rq *req) (*http.Response, error) {
 	return http.NewResponse(&resp{ID: rq.ID, Name: rq.Name}, gohttp.StatusOK), nil
 }
 
-func (s *hsvc) postEndpointApt(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, rq *req) (*http.Response, error) {
+func (s *hsvc) postEndpointApt(c context.Context, w gohttp.ResponseWriter, rq *req) (*http.Response, error) {
 	msg1 := c.Value("apt1").(string)
 	msg2 := c.Value("apt2").(string)
 	return http.NewResponse(&resp{ID: rq.ID, Name: msg1 + msg2 + rq.Name}, gohttp.StatusOK), nil
 }
 
-func (s *hsvc) postEndpointGErr(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, rq *req) (*http.Response, error) {
+func (s *hsvc) postEndpointGErr(c context.Context, w gohttp.ResponseWriter, rq *req) (*http.Response, error) {
 	return nil, fmt.Errorf("endpoint error")
 }
 
-func (s *hsvc) postEndpointHErr(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, rq *req) (*http.Response, error) {
+func (s *hsvc) postEndpointHErr(c context.Context, w gohttp.ResponseWriter, rq *req) (*http.Response, error) {
 	return nil, http.WrapError(fmt.Errorf("endpoint error"), gohttp.StatusBadRequest)
 }

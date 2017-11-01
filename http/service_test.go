@@ -161,7 +161,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			verb: "POST",
 			path: "/svc",
 			req:  req{ID: 1, Name: "John"},
-			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) (*http.Response, error) {
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) (*http.Response, error) {
 				return http.NewResponse(resp{ID: req.ID, Name: req.Name}, gohttp.StatusOK), nil
 			},
 			want:     `{"code":200,"data":{"id":1,"name":"John"}}`,
@@ -178,7 +178,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 					h(c, w, r)
 				}
 			},
-			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) (*http.Response, error) {
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) (*http.Response, error) {
 				v := c.Value("foo").(string)
 				return http.NewResponse(resp{ID: req.ID, Name: v}, gohttp.StatusOK), nil
 			},
@@ -190,7 +190,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			verb:    "POST",
 			path:    "/svc",
 			wantErr: true,
-			endpoint: func(c *req, w gohttp.ResponseWriter, r *gohttp.Request, req *req) (*http.Response, error) {
+			endpoint: func(c *req, w gohttp.ResponseWriter, req *req) (*http.Response, error) {
 				return nil, nil
 			},
 		},
@@ -199,16 +199,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			verb:    "POST",
 			path:    "/svc",
 			wantErr: true,
-			endpoint: func(c context.Context, w *req, r *gohttp.Request, req *req) (*http.Response, error) {
-				return nil, nil
-			},
-		},
-		{
-			name:    "test invalid r",
-			verb:    "POST",
-			path:    "/svc",
-			wantErr: true,
-			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *req, req *req) (*http.Response, error) {
+			endpoint: func(c context.Context, w *req, req *req) (*http.Response, error) {
 				return nil, nil
 			},
 		},
@@ -226,7 +217,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			verb:    "POST",
 			path:    "/svc",
 			wantErr: true,
-			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) *http.Response {
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) *http.Response {
 				return nil
 			},
 		},
@@ -235,7 +226,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			verb:    "POST",
 			path:    "/svc",
 			wantErr: true,
-			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) {
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) {
 			},
 		},
 		{
@@ -244,7 +235,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			path:     "/svc",
 			want:     `{"code":200}`,
 			wantCode: gohttp.StatusOK,
-			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) error {
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) error {
 				return nil
 			},
 		},
@@ -254,7 +245,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			path:     "/svc",
 			want:     `{"code":500,"errors":["foo err"]}`,
 			wantCode: gohttp.StatusInternalServerError,
-			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) error {
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) error {
 				return fmt.Errorf("foo err")
 			},
 		},
@@ -264,7 +255,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			path:     "/svc",
 			want:     `{"code":400,"errors":["foo err"]}`,
 			wantCode: gohttp.StatusBadRequest,
-			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) error {
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) error {
 				return http.WrapError(fmt.Errorf("foo err"), gohttp.StatusBadRequest)
 			},
 		},
@@ -273,7 +264,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			verb:    "POST",
 			path:    "/svc",
 			wantErr: true,
-			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) (error, *http.Response) {
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) (error, *http.Response) {
 				return nil, nil
 			},
 		},
@@ -282,7 +273,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			verb:    "POST",
 			path:    "/svc",
 			wantErr: true,
-			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) (*http.Response, *req) {
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) (*http.Response, *req) {
 				return nil, nil
 			},
 		},
@@ -291,7 +282,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			verb: "POST",
 			path: "/svc",
 			req:  req{ID: 1, Name: "John"},
-			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) (*http.Response, error) {
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) (*http.Response, error) {
 				return nil, http.WrapError(fmt.Errorf("endpoint error"), gohttp.StatusBadRequest)
 			},
 			want:     `{"code":400,"errors":["endpoint error"]}`,
@@ -302,7 +293,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			verb: "POST",
 			path: "/svc",
 			req:  req{ID: 1, Name: "John"},
-			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) (*http.Response, error) {
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) (*http.Response, error) {
 				return nil, fmt.Errorf("endpoint error")
 			},
 			want:     `{"code":500,"errors":["endpoint error"]}`,
@@ -313,13 +304,26 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			verb: "POST",
 			path: "/svc",
 			req:  req{ID: 1, Name: "John"},
-			endpoint: func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request, req *req) (*http.Response, error) {
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) (*http.Response, error) {
 				return nil, nil
 			},
 			want:     `{"code":200}`,
 			wantCode: gohttp.StatusOK,
 		},
+		{
+			name: "test context req",
+			verb: "POST",
+			path: "/svc",
+			req:  req{ID: 1, Name: "John"},
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) (*http.Response, error) {
+				r := http.ReqFromCtx(c)
+				return http.NewResponse(r.URL.Path, gohttp.StatusOK), nil
+			},
+			want:     `{"code":200,"data":"/svc"}`,
+			wantCode: gohttp.StatusOK,
+		},
 
+		// TODO - Test req from context
 		// TODO - Test Validation (Add Validate to *req) and err paths
 	}
 

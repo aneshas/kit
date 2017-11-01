@@ -37,7 +37,7 @@ func NewServer(opts ...ServerOption) *Server {
 	}
 
 	if srv.logger == nil {
-		srv.logger = log.New(os.Stdout, "kit/http =>", log.Ldate|log.Ltime|log.Llongfile)
+		srv.logger = log.New(os.Stdout, "kit/http => ", log.Ldate|log.Ltime|log.Llongfile)
 	}
 
 	if srv.tlsEnabled() {
@@ -83,11 +83,11 @@ func (s *Server) Run(port int) error {
 		}
 	}()
 
+	<-stop
+
 	if err != nil {
 		return err
 	}
-
-	<-stop
 
 	s.logger.Println("Server shutting down...")
 	err = s.Stop()

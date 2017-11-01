@@ -7,7 +7,7 @@ import (
 	gohttp "net/http"
 )
 
-var marshalError = `{"code":500,"errors":["request was successfull but we were unable to encode the response."]}`
+var marshalError = `{"code":500,"errors":["request was successful but we were unable to encode the response."]}`
 
 type response struct {
 	Code   int         `json:"code"`

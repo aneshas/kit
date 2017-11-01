@@ -1,0 +1,20 @@
+box: golang
+
+test:
+  steps:
+    - golint:
+      exclude: "example/.+go|vendor/.+go|mock/.+go|.+_mock.go"
+    - script:
+      name: workspace setup 
+      code: |
+        mkdir -p $GOPATH/src/github.com/tonto/kit
+        cp -R * $GOPATH/src/github.com/tonto/kit/ 
+    # - anes/goveralls:
+    #   cwd: $GOPATH/src/github.com/tonto/kit/
+    #   token: $COVERALLS_TOKEN 
+    - script:
+      cwd: $GOPATH/src/github.com/tonto/kit/
+      name: test 
+      code: |
+        go get -d -t ./...
+        go test -race $(go list ./... | grep -v /example)

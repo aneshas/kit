@@ -11,7 +11,9 @@ import (
 	"github.com/tonto/kit/http/respond"
 )
 
-type validator interface {
+// Validator interface can be implemented by endpoint request
+// types and it will be automatically called by service upon decoding
+type Validator interface {
 	Validate() error
 }
 
@@ -40,8 +42,9 @@ func (b *BaseService) RegisterHandler(verb string, path string, h HandlerFunc) {
 
 // RegisterEndpoint is a helper method that registers service json endpoint
 // JSON endpoint method should have the following signature:
-// func(c context.Context, w http.ResponseWriter, r *http.Request, req *CustomeType) (*http.Response, error)
+// func(c context.Context, w http.ResponseWriter, req *CustomeType) (*http.Response, error)
 // where *CustomType is your custom request type to which r.Body will be json unmarshalled automatically
+// *http.Response can be omited if endpoint has no reasonable response, error is always required however
 func (b *BaseService) RegisterEndpoint(verb string, path string, method interface{}) error {
 	h, err := b.handlerFromMethod(method)
 	if err != nil {
@@ -61,7 +64,7 @@ func (b *BaseService) RegisterEndpoint(verb string, path string, method interfac
 }
 
 func (b *BaseService) handlerFromMethod(m interface{}) (HandlerFunc, error) {
-	err := b.checkMtdSig(m)
+	err := b.validateSignature(m)
 	if err != nil {
 		return nil, err
 	}
@@ -71,24 +74,28 @@ func (b *BaseService) handlerFromMethod(m interface{}) (HandlerFunc, error) {
 		if err != nil {
 			respond.WithJSON(
 				w, r,
-				WrapError(fmt.Errorf("internal error: could not decode request"), http.StatusBadRequest),
+				WrapError(fmt.Errorf("internal error: could not decode request: %v", err), http.StatusBadRequest),
 			)
 			return
 		}
 
-		if validator, ok := interface{}(req).(validator); ok {
+		if validator, ok := interface{}(req).(Validator); ok {
 			err = validator.Validate()
 			if err != nil {
-				// respond.With(w, r, http.StatusBadRequest, err)
+				respond.WithJSON(
+					w, r,
+					WrapError(fmt.Errorf("could not validate request: %v", err), http.StatusBadRequest),
+				)
 				return
 			}
 		}
+
+		c = context.WithValue(c, contextReqKey, r)
 
 		v := reflect.ValueOf(m)
 		ret := v.Call([]reflect.Value{
 			reflect.ValueOf(c),
 			reflect.ValueOf(w),
-			reflect.ValueOf(r),
 			reflect.ValueOf(req),
 		})
 
@@ -116,11 +123,11 @@ func (b *BaseService) handlerFromMethod(m interface{}) (HandlerFunc, error) {
 	}, nil
 }
 
-func (b *BaseService) checkMtdSig(m interface{}) error {
+func (b *BaseService) validateSignature(m interface{}) error {
 	t := reflect.ValueOf(m).Type()
 
-	if t.NumIn() != 4 {
-		return fmt.Errorf("incorrect endpoint signature (must have 4 params - refer to docs)")
+	if t.NumIn() != 3 {
+		return fmt.Errorf("incorrect endpoint signature (must have 3 params - refer to docs)")
 	}
 
 	if t.NumOut() > 2 || t.NumOut() < 1 {
@@ -151,9 +158,6 @@ func (b *BaseService) checkMtdSig(m interface{}) error {
 		return fmt.Errorf("param two must implement http.ResponseWriter")
 	}
 
-	if t.In(2) != reflect.TypeOf(&http.Request{}) {
-		return fmt.Errorf("param three must be of type *http.Request")
-	}
 	return nil
 }
 
@@ -161,7 +165,7 @@ func (b *BaseService) decodeReq(r *http.Request, m interface{}) (interface{}, er
 	defer r.Body.Close()
 
 	v := reflect.ValueOf(m)
-	reqParamType := v.Type().In(3).Elem()
+	reqParamType := v.Type().In(2).Elem()
 	req := reflect.New(reqParamType).Interface()
 
 	err := json.NewDecoder(r.Body).Decode(req)

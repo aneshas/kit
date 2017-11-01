@@ -1,0 +1,3 @@
+set -e
+go get -d -t ./...
+go test -race $(go list ./... | grep -v /example)
