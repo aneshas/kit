@@ -22,7 +22,8 @@ func NewServer(opts ...ServerOption) *Server {
 			WriteTimeout: 10 * time.Second,
 			IdleTimeout:  120 * time.Second,
 		},
-		mux: mux.NewRouter().StrictSlash(true),
+		stop: make(chan os.Signal, 1),
+		mux:  mux.NewRouter().StrictSlash(true),
 	}
 
 	if srv.notFoundHandler != nil {
@@ -70,7 +71,6 @@ func (s *Server) Run(port int) error {
 	addr := fmt.Sprintf("0.0.0.0:%d", port)
 	s.httpServer.Addr = addr
 
-	s.stop = make(chan os.Signal, 1)
 	signal.Notify(s.stop, os.Interrupt, os.Kill)
 
 	var err error
@@ -79,9 +79,9 @@ func (s *Server) Run(port int) error {
 		s.logger.Printf("Starting server at: %s", s.httpServer.Addr)
 		if s.tlsEnabled() {
 			err = s.runTLS()
-		} else {
-			err = s.httpServer.ListenAndServe()
+			return
 		}
+		err = s.httpServer.ListenAndServe()
 	}()
 
 	<-s.stop
@@ -91,9 +91,10 @@ func (s *Server) Run(port int) error {
 	}
 
 	s.logger.Println("Server shutting down...")
-	err = s.httpServer.Shutdown(context.Background())
-	if err != nil {
-		return err
+
+	e := s.httpServer.Shutdown(context.Background())
+	if e != nil {
+		return e
 	}
 
 	s.logger.Println("Server stopped.")
