@@ -27,5 +27,5 @@ func main() {
 		NewCustomerService(logger),
 	)
 
-	server.Run(8080)
+	log.Fatal(server.Run(8080))
 }

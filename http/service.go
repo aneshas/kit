@@ -42,7 +42,7 @@ func (b *BaseService) RegisterHandler(verb string, path string, h HandlerFunc) {
 
 // RegisterEndpoint is a helper method that registers service json endpoint
 // JSON endpoint method should have the following signature:
-// func(c context.Context, w http.ResponseWriter, req *CustomeType) (*http.Response, error)
+// func(c context.Context, w http.ResponseWriter, req *CustomType) (*http.Response, error)
 // where *CustomType is your custom request type to which r.Body will be json unmarshalled automatically
 // *http.Response can be omitted if endpoint has no reasonable response, error is always required however
 func (b *BaseService) RegisterEndpoint(verb string, path string, method interface{}) error {
