@@ -43,11 +43,21 @@ func TestWithJSON(t *testing.T) {
 		},
 		{
 			name: "test err success",
-			resp: http.WrapError(
-				fmt.Errorf("an error"),
+			resp: http.NewError(
 				gohttp.StatusBadRequest,
+				fmt.Errorf("an error"),
 			),
 			want:     `{"code":400,"errors":["an error"]}`,
+			wantCode: gohttp.StatusBadRequest,
+		},
+		{
+			name: "test multiple errs",
+			resp: http.NewError(
+				gohttp.StatusBadRequest,
+				fmt.Errorf("error 1"),
+				fmt.Errorf("error 2"),
+			),
+			want:     `{"code":400,"errors":["error 1","error 2"]}`,
 			wantCode: gohttp.StatusBadRequest,
 		},
 		{

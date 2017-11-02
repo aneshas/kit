@@ -1,25 +1,31 @@
 package http
 
-// WrapError wraps provided err and http response code
+// NewError wraps provided errs and http response code
 // thus creating new http error
-func WrapError(err error, code int) *Error {
+func NewError(code int, errs ...error) *Error {
 	return &Error{
 		code: code,
-		err:  err,
+		errs: errs,
 	}
 }
 
 // Error represents http error
 type Error struct {
 	code int
-	err  error
+	errs []error
 }
 
 // Code returns http response code associated with Error
 func (e *Error) Code() int { return e.code }
 
-// Err returns wrapped error
-func (e *Error) Err() error { return e.err }
+// Errs returns wrapped errors
+func (e *Error) Errs() []error { return e.errs }
 
 // Error returns error description
-func (e *Error) Error() string { return e.err.Error() }
+func (e *Error) Error() string {
+	var str string
+	for _, err := range e.errs {
+		str += err.Error() + "\n"
+	}
+	return str
+}

@@ -17,6 +17,14 @@ type req struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
 }
+
+func (r *req) Validate() error {
+	if r.ID == 999 {
+		return fmt.Errorf("invalid id")
+	}
+	return nil
+}
+
 type resp struct {
 	ID   int    `json:"id"`
 	Name string `json:"name"`
@@ -227,5 +235,5 @@ func (s *hsvc) postEndpointGErr(c context.Context, w gohttp.ResponseWriter, rq *
 }
 
 func (s *hsvc) postEndpointHErr(c context.Context, w gohttp.ResponseWriter, rq *req) (*http.Response, error) {
-	return nil, http.WrapError(fmt.Errorf("endpoint error"), gohttp.StatusBadRequest)
+	return nil, http.NewError(gohttp.StatusBadRequest, fmt.Errorf("endpoint error"))
 }

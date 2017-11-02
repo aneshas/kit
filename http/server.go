@@ -62,6 +62,7 @@ type Server struct {
 	keyFile         string
 	mux             *mux.Router
 	notFoundHandler http.Handler
+	stop            chan os.Signal
 }
 
 // Run will start a server listening on a given port
@@ -69,8 +70,8 @@ func (s *Server) Run(port int) error {
 	addr := fmt.Sprintf("0.0.0.0:%d", port)
 	s.httpServer.Addr = addr
 
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, os.Kill)
+	s.stop = make(chan os.Signal, 1)
+	signal.Notify(s.stop, os.Interrupt, os.Kill)
 
 	var err error
 
@@ -83,14 +84,14 @@ func (s *Server) Run(port int) error {
 		}
 	}()
 
-	<-stop
+	<-s.stop
 
 	if err != nil {
 		return err
 	}
 
 	s.logger.Println("Server shutting down...")
-	err = s.Stop()
+	err = s.httpServer.Shutdown(context.Background())
 	if err != nil {
 		return err
 	}
@@ -119,8 +120,8 @@ func (s *Server) runTLS() error {
 }
 
 // Stop attempts to gracefully shutdown the server
-func (s *Server) Stop() error {
-	return s.httpServer.Shutdown(context.Background())
+func (s *Server) Stop() {
+	s.stop <- os.Interrupt
 }
 
 // RegisterServices registers given http Services with

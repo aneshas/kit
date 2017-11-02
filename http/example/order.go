@@ -59,6 +59,17 @@ func (r *orderCreateReq) Validate() error {
 	return nil
 }
 
+type orderCreateResp struct {
+	CustomerID int64 `json:"customer_id"`
+}
+
 func (o *Order) create(c context.Context, w ghttp.ResponseWriter, req *orderCreateReq) (*http.Response, error) {
-	return http.NewResponse(req, ghttp.StatusCreated), nil
+	return http.NewResponse(
+		orderCreateResp{
+			// Return customer id to demonstrate that
+			// we got it in the request
+			CustomerID: req.CustomerID,
+		},
+		ghttp.StatusCreated,
+	), nil
 }

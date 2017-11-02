@@ -74,7 +74,7 @@ func (b *BaseService) handlerFromMethod(m interface{}) (HandlerFunc, error) {
 		if err != nil {
 			respond.WithJSON(
 				w, r,
-				WrapError(fmt.Errorf("internal error: could not decode request: %v", err), http.StatusBadRequest),
+				NewError(http.StatusBadRequest, fmt.Errorf("internal error: could not decode request: %v", err)),
 			)
 			return
 		}
@@ -84,42 +84,23 @@ func (b *BaseService) handlerFromMethod(m interface{}) (HandlerFunc, error) {
 			if err != nil {
 				respond.WithJSON(
 					w, r,
-					WrapError(fmt.Errorf("could not validate request: %v", err), http.StatusBadRequest),
+					NewError(http.StatusBadRequest, fmt.Errorf("could not validate request: %v", err)),
 				)
 				return
 			}
 		}
 
 		c = context.WithValue(c, contextReqKey, r)
-
 		v := reflect.ValueOf(m)
-		ret := v.Call([]reflect.Value{
-			reflect.ValueOf(c),
-			reflect.ValueOf(w),
-			reflect.ValueOf(req),
-		})
 
-		if len(ret) == 1 {
-			if !ret[0].IsNil() {
-				b.writeError(w, r, ret[0].Interface())
-				return
-			}
-			respond.WithJSON(w, r, NewResponse(nil, http.StatusOK))
-			return
-		}
-
-		if !ret[1].IsNil() {
-			b.writeError(w, r, ret[1].Interface())
-			return
-		}
-
-		if ret[0].IsNil() {
-			respond.WithJSON(w, r, NewResponse(nil, http.StatusOK))
-			return
-		}
-
-		resp := ret[0].Interface().(*Response)
-		respond.WithJSON(w, r, resp)
+		b.writeResponse(
+			w, r,
+			v.Call([]reflect.Value{
+				reflect.ValueOf(c),
+				reflect.ValueOf(w),
+				reflect.ValueOf(req),
+			}),
+		)
 	}, nil
 }
 
@@ -176,12 +157,36 @@ func (b *BaseService) decodeReq(r *http.Request, m interface{}) (interface{}, er
 	return req, nil
 }
 
+func (b *BaseService) writeResponse(w http.ResponseWriter, r *http.Request, ret []reflect.Value) {
+	if len(ret) == 1 {
+		if !ret[0].IsNil() {
+			b.writeError(w, r, ret[0].Interface())
+			return
+		}
+		respond.WithJSON(w, r, NewResponse(nil, http.StatusOK))
+		return
+	}
+
+	if !ret[1].IsNil() {
+		b.writeError(w, r, ret[1].Interface())
+		return
+	}
+
+	if ret[0].IsNil() {
+		respond.WithJSON(w, r, NewResponse(nil, http.StatusOK))
+		return
+	}
+
+	resp := ret[0].Interface().(*Response)
+	respond.WithJSON(w, r, resp)
+}
+
 func (b *BaseService) writeError(w http.ResponseWriter, r *http.Request, e interface{}) {
 	if _, ok := e.(*Error); ok {
 		respond.WithJSON(w, r, e)
 		return
 	}
-	respond.WithJSON(w, r, WrapError(e.(error), http.StatusInternalServerError))
+	respond.WithJSON(w, r, NewError(http.StatusInternalServerError, e.(error)))
 }
 
 // Endpoints returns all registered endpoints

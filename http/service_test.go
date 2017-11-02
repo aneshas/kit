@@ -256,7 +256,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			want:     `{"code":400,"errors":["foo err"]}`,
 			wantCode: gohttp.StatusBadRequest,
 			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) error {
-				return http.WrapError(fmt.Errorf("foo err"), gohttp.StatusBadRequest)
+				return http.NewError(gohttp.StatusBadRequest, fmt.Errorf("foo err"))
 			},
 		},
 		{
@@ -283,7 +283,7 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			path: "/svc",
 			req:  req{ID: 1, Name: "John"},
 			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) (*http.Response, error) {
-				return nil, http.WrapError(fmt.Errorf("endpoint error"), gohttp.StatusBadRequest)
+				return nil, http.NewError(gohttp.StatusBadRequest, fmt.Errorf("endpoint error"))
 			},
 			want:     `{"code":400,"errors":["endpoint error"]}`,
 			wantCode: gohttp.StatusBadRequest,
@@ -322,9 +322,17 @@ func TestRegisterEndpoint_WithEndpointsAndMW(t *testing.T) {
 			want:     `{"code":200,"data":"/svc"}`,
 			wantCode: gohttp.StatusOK,
 		},
-
-		// TODO - Test req from context
-		// TODO - Test Validation (Add Validate to *req) and err paths
+		{
+			name: "test validation error",
+			verb: "POST",
+			path: "/svc",
+			req:  req{ID: 999, Name: "John"},
+			endpoint: func(c context.Context, w gohttp.ResponseWriter, req *req) (*http.Response, error) {
+				return nil, http.NewError(gohttp.StatusBadRequest, fmt.Errorf("endpoint error"))
+			},
+			want:     `{"code":400,"errors":["could not validate request: invalid id"]}`,
+			wantCode: gohttp.StatusBadRequest,
+		},
 	}
 
 	for _, c := range cases {

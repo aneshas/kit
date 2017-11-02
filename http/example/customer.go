@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	ghttp "net/http"
 
@@ -21,6 +22,7 @@ func NewCustomerService(logger *log.Logger) *Customer {
 	)
 
 	svc.RegisterHandler("GET", "/details/{id}", svc.details)
+	svc.RegisterEndpoint("PUT", "/update", svc.update)
 
 	// If having problems accessing your endpoint you might
 	// want to check err to see if you have endpoint validation issues
@@ -54,5 +56,16 @@ type customerCreateReq struct {
 }
 
 func (o *Customer) create(c context.Context, w ghttp.ResponseWriter, req *customerCreateReq) (*http.Response, error) {
-	return http.NewResponse(req, ghttp.StatusCreated), nil
+	return nil, http.NewError(
+		ghttp.StatusInternalServerError,
+		fmt.Errorf("some error"),
+		fmt.Errorf("another error"),
+	)
+}
+
+type customerUpdateReq struct{}
+
+func (o *Customer) update(c context.Context, w ghttp.ResponseWriter, req *customerUpdateReq) (*http.Response, error) {
+	// We can also return plain error in which case default status is 500
+	return nil, fmt.Errorf("internal error")
 }

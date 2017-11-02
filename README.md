@@ -15,5 +15,3 @@ This package contains common packages used accross server based projects
 
 HTTP server implementation with server lifecycle control, commonly used 
 adapters, easy service registration and response/error handling, tls support...
-
-

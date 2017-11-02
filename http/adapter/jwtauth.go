@@ -47,7 +47,7 @@ func WithJWTAuth(alg JWTAlg, key []byte, callback AuthCallbackFunc) http.Adapter
 			if ah == "" {
 				respond.WithJSON(
 					w, r,
-					http.WrapError(fmt.Errorf("no authorization header found"), gohttp.StatusBadRequest),
+					http.NewError(gohttp.StatusBadRequest, fmt.Errorf("no authorization header found")),
 				)
 				return
 			}
@@ -56,7 +56,7 @@ func WithJWTAuth(alg JWTAlg, key []byte, callback AuthCallbackFunc) http.Adapter
 			if len(s) < 2 || s[1] == "" {
 				respond.WithJSON(
 					w, r,
-					http.WrapError(fmt.Errorf("no bearer token found"), gohttp.StatusBadRequest),
+					http.NewError(gohttp.StatusBadRequest, fmt.Errorf("no bearer token found")),
 				)
 				return
 			}
@@ -65,14 +65,14 @@ func WithJWTAuth(alg JWTAlg, key []byte, callback AuthCallbackFunc) http.Adapter
 
 			claims, err := verifyJWTToken(alg, token, key)
 			if err != nil {
-				respond.WithJSON(w, r, http.WrapError(err, gohttp.StatusBadRequest))
+				respond.WithJSON(w, r, http.NewError(gohttp.StatusBadRequest, err))
 				return
 			}
 
 			if err := callback(context.Background(), token, claims); err != nil {
 				respond.WithJSON(
 					w, r,
-					http.WrapError(fmt.Errorf("unauthorized: %v", err), gohttp.StatusUnauthorized),
+					http.NewError(gohttp.StatusUnauthorized, fmt.Errorf("unauthorized: %v", err)),
 				)
 				return
 			}

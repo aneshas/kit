@@ -22,7 +22,7 @@ type httpResponse interface {
 
 type httpError interface {
 	Code() int
-	Err() error
+	Errs() []error
 }
 
 // WithJSON makes a new json response based on a given response interface
@@ -72,11 +72,15 @@ func writeResponse(w gohttp.ResponseWriter, resp httpResponse) {
 
 func writeError(w gohttp.ResponseWriter, e httpError) {
 	w.WriteHeader(e.Code())
+	var errs []string
+	for _, e := range e.Errs() {
+		errs = append(errs, e.Error())
+	}
 	writeJSON(
 		w,
 		response{
 			Code:   e.Code(),
-			Errors: []string{e.Err().Error()},
+			Errors: errs,
 		},
 	)
 }
