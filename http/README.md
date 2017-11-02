@@ -1,4 +1,5 @@
 # http
+### `import “github.com/tonto/kit/http”`
 Package http provides server implementation with lifecycle control, graceful shutdown, commonly used 
 adapters, easy service registration and response/error handling, endpoints implementation, tls support...
 
