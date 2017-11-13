@@ -4,8 +4,8 @@
 
 # kit
 [![wercker status](https://app.wercker.com/status/684f3efd53b66300c2470d2f0a6c2bd4/s/master "wercker status")](https://app.wercker.com/project/byKey/684f3efd53b66300c2470d2f0a6c2bd4)
+[![codecov](https://codecov.io/gh/tonto/kit/branch/master/graph/badge.svg)](https://codecov.io/gh/tonto/kit)
 [![Go Report Card](https://goreportcard.com/badge/github.com/tonto/kit)](https://goreportcard.com/report/github.com/tonto/kit)
-[![Coverage Status](https://coveralls.io/repos/github/tonto/kit/badge.svg?branch=master)](https://coveralls.io/github/tonto/kit?branch=master)
 
 This package contains common packages used accross server based projects
 

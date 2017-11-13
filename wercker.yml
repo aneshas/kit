@@ -9,12 +9,11 @@ test:
       code: |
         mkdir -p $GOPATH/src/github.com/tonto/kit
         cp -R * $GOPATH/src/github.com/tonto/kit/ 
-    - anes/goveralls:
-      cwd: $GOPATH/src/github.com/tonto/kit/
-      token: $COVERALLS_TOKEN 
     - script:
       cwd: $GOPATH/src/github.com/tonto/kit/
       name: test 
       code: |
         go get -d -t ./...
-        go test -race $(go list ./... | grep -v /example)
+        ./test.sh
+        bash <(curl -s https://codecov.io/bash) -t $CODECOV_TOKEN
+
