@@ -24,7 +24,7 @@ func WithLogger(l *log.Logger) ServerOption {
 	}
 }
 
-// WithTLSConfig represents server option for setting tls cer and key
+// WithTLSConfig represents server option for setting tls cer and key files
 func WithTLSConfig(cert, key string) ServerOption {
 	return func(s *Server) {
 		s.certFile = cert

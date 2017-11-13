@@ -3,9 +3,9 @@ package http_test
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/json"
 	"fmt"
-	"log"
 	gohttp "net/http"
 	"testing"
 
@@ -33,14 +33,15 @@ type resp struct {
 
 func TestResponsesAndAdapters(t *testing.T) {
 	cases := []struct {
-		name     string
-		verb     string
-		path     string
-		adapters []http.Adapter
-		req      req
-		want     response
-		wantCode int
-		wantErr  bool
+		name       string
+		verb       string
+		path       string
+		adapters   []http.Adapter
+		req        req
+		want       response
+		sslEnabled bool
+		wantCode   int
+		wantErr    bool
 	}{
 		{
 			name: "post handler",
@@ -55,97 +56,98 @@ func TestResponsesAndAdapters(t *testing.T) {
 			wantCode: gohttp.StatusOK,
 			wantErr:  false,
 		},
-		// {
-		// 	name: "post handler with apt",
-		// 	verb: "POST",
-		// 	path: "/svc/post_handler_apt",
-		// 	req:  req{ID: 1, Name: "John Doe"},
-		// 	want: response{
-		// 		Code:   gohttp.StatusOK,
-		// 		Data:   &resp{ID: 1, Name: "msg1 msg2 John Doe"},
-		// 		Errors: nil,
-		// 	},
-		// 	adapters: []http.Adapter{
-		// 		func(h http.HandlerFunc) http.HandlerFunc {
-		// 			return func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request) {
-		// 				c = context.WithValue(c, "apt2", "msg2 ")
-		// 				h(c, w, r)
-		// 			}
-		// 		},
-		// 		func(h http.HandlerFunc) http.HandlerFunc {
-		// 			return func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request) {
-		// 				c = context.WithValue(c, "apt1", "msg1 ")
-		// 				h(c, w, r)
-		// 			}
-		// 		},
-		// 	},
-		// 	wantCode: gohttp.StatusOK,
-		// 	wantErr:  false,
-		// },
-		// {
-		// 	name: "endpoint handler",
-		// 	verb: "POST",
-		// 	path: "/svc/post_ep",
-		// 	req:  req{ID: 1, Name: "John Doe"},
-		// 	want: response{
-		// 		Code:   gohttp.StatusOK,
-		// 		Data:   &resp{ID: 1, Name: "John Doe"},
-		// 		Errors: nil,
-		// 	},
-		// 	wantCode: gohttp.StatusOK,
-		// 	wantErr:  false,
-		// },
-		// {
-		// 	name: "endpoint handler with apt",
-		// 	verb: "POST",
-		// 	path: "/svc/post_ep_apt",
-		// 	req:  req{ID: 1, Name: "John Doe"},
-		// 	want: response{
-		// 		Code:   gohttp.StatusOK,
-		// 		Data:   &resp{ID: 1, Name: "msg1 msg2 John Doe"},
-		// 		Errors: nil,
-		// 	},
-		// 	adapters: []http.Adapter{
-		// 		func(h http.HandlerFunc) http.HandlerFunc {
-		// 			return func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request) {
-		// 				c = context.WithValue(c, "apt2", "msg2 ")
-		// 				h(c, w, r)
-		// 			}
-		// 		},
-		// 		func(h http.HandlerFunc) http.HandlerFunc {
-		// 			return func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request) {
-		// 				c = context.WithValue(c, "apt1", "msg1 ")
-		// 				h(c, w, r)
-		// 			}
-		// 		},
-		// 	},
-		// 	wantCode: gohttp.StatusOK,
-		// 	wantErr:  false,
-		// },
-		// {
-		// 	name: "endpoint handler go error",
-		// 	verb: "POST",
-		// 	path: "/svc/post_ep_gerr",
-		// 	req:  req{ID: 1, Name: "John Doe"},
-		// 	want: response{
-		// 		Code:   gohttp.StatusInternalServerError,
-		// 		Errors: []string{"endpoint error"},
-		// 	},
-		// 	wantCode: gohttp.StatusInternalServerError,
-		// 	wantErr:  false,
-		// },
-		// {
-		// 	name: "endpoint handler http error",
-		// 	verb: "POST",
-		// 	path: "/svc/post_ep_herr",
-		// 	req:  req{ID: 1, Name: "John Doe"},
-		// 	want: response{
-		// 		Code:   gohttp.StatusBadRequest,
-		// 		Errors: []string{"endpoint error"},
-		// 	},
-		// 	wantCode: gohttp.StatusBadRequest,
-		// 	wantErr:  false,
-		// },
+		{
+			name: "post handler with apt",
+			verb: "POST",
+			path: "/svc/post_handler_apt",
+			req:  req{ID: 1, Name: "John Doe"},
+			want: response{
+				Code:   gohttp.StatusOK,
+				Data:   &resp{ID: 1, Name: "msg1 msg2 John Doe"},
+				Errors: nil,
+			},
+			adapters: []http.Adapter{
+				func(h http.HandlerFunc) http.HandlerFunc {
+					return func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request) {
+						c = context.WithValue(c, "apt2", "msg2 ")
+						h(c, w, r)
+					}
+				},
+				func(h http.HandlerFunc) http.HandlerFunc {
+					return func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request) {
+						c = context.WithValue(c, "apt1", "msg1 ")
+						h(c, w, r)
+					}
+				},
+			},
+			wantCode: gohttp.StatusOK,
+			wantErr:  false,
+		},
+		{
+			name: "endpoint handler",
+			verb: "POST",
+			path: "/svc/post_ep",
+			req:  req{ID: 1, Name: "John Doe"},
+			want: response{
+				Code:   gohttp.StatusOK,
+				Data:   &resp{ID: 1, Name: "John Doe"},
+				Errors: nil,
+			},
+			wantCode: gohttp.StatusOK,
+			wantErr:  false,
+		},
+		{
+			name: "endpoint handler with apt",
+			verb: "POST",
+			path: "/svc/post_ep_apt",
+			req:  req{ID: 1, Name: "John Doe"},
+			want: response{
+				Code:   gohttp.StatusOK,
+				Data:   &resp{ID: 1, Name: "msg1 msg2 John Doe"},
+				Errors: nil,
+			},
+			adapters: []http.Adapter{
+				func(h http.HandlerFunc) http.HandlerFunc {
+					return func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request) {
+						c = context.WithValue(c, "apt2", "msg2 ")
+						h(c, w, r)
+					}
+				},
+				func(h http.HandlerFunc) http.HandlerFunc {
+					return func(c context.Context, w gohttp.ResponseWriter, r *gohttp.Request) {
+						c = context.WithValue(c, "apt1", "msg1 ")
+						h(c, w, r)
+					}
+				},
+			},
+			wantCode: gohttp.StatusOK,
+			wantErr:  false,
+		},
+		{
+			name: "endpoint handler go error",
+			verb: "POST",
+			path: "/svc/post_ep_gerr",
+			req:  req{ID: 1, Name: "John Doe"},
+			want: response{
+				Code:   gohttp.StatusInternalServerError,
+				Errors: []string{"endpoint error"},
+			},
+			wantCode: gohttp.StatusInternalServerError,
+			wantErr:  false,
+		},
+		{
+			name: "endpoint handler http error",
+			verb: "POST",
+			path: "/svc/post_ep_herr",
+			req:  req{ID: 1, Name: "John Doe"},
+			want: response{
+				Code:   gohttp.StatusBadRequest,
+				Errors: []string{"endpoint error"},
+			},
+			wantCode:   gohttp.StatusBadRequest,
+			wantErr:    false,
+			sslEnabled: true,
+		},
 
 		// TODO - Test adapters and errors
 	}
@@ -155,6 +157,10 @@ func TestResponsesAndAdapters(t *testing.T) {
 			opts := []http.ServerOption{}
 			if c.adapters != nil {
 				opts = append(opts, http.WithAdapters(c.adapters...))
+			}
+
+			if c.sslEnabled {
+				opts = append(opts, http.WithTLSConfig("testdata/server.crt", "testdata/server.key"))
 			}
 			s := http.NewServer(opts...)
 
@@ -169,14 +175,22 @@ func TestResponsesAndAdapters(t *testing.T) {
 
 			ch := make(chan struct{})
 			go func(i int) {
-				err := s.Run(8000 + i)
-				log.Println("err ", err)
+				s.Run(8000 + i)
 				ch <- struct{}{}
 			}(i)
 
 			body, _ := json.Marshal(c.req)
-			req, _ := gohttp.NewRequest(c.verb, fmt.Sprintf("http://localhost:%d%s", 8000+i, c.path), bytes.NewReader(body))
-			rsp, _ := gohttp.DefaultClient.Do(req)
+			url := fmt.Sprintf("http://localhost:%d%s", 8000+i, c.path)
+			var client *gohttp.Client = gohttp.DefaultClient
+			if c.sslEnabled {
+				url = fmt.Sprintf("https://localhost%s", c.path)
+				tr := &gohttp.Transport{
+					TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+				}
+				client = &gohttp.Client{Transport: tr}
+			}
+			req, _ := gohttp.NewRequest(c.verb, url, bytes.NewReader(body))
+			rsp, _ := client.Do(req)
 			jresp := response{}
 			json.NewDecoder(rsp.Body).Decode(&jresp)
 

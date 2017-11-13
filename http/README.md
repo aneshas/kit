@@ -23,7 +23,7 @@ logger := log.New(os.Stdout, "http/example => ", log.Ldate|log.Ltime|log.Lshortf
 
 server := http.NewServer(
   http.WithLogger(logger),
-  http.WithTLSConfig("cert", "key"),
+  http.WithTLSConfig("cert.pem", "key.pem"),
   http.WithDefaultHandler(hdlr), // Override default http server handler (gorilla mux by default)
   http.WithNotFoundHandler(notFoundHdlr),
   http.WithAdapters(

@@ -76,11 +76,12 @@ func (s *Server) Run(port int) error {
 	var err error
 
 	go func() {
-		s.logger.Printf("Starting server at: %s", s.httpServer.Addr)
 		if s.tlsEnabled() {
+			s.logger.Println("Listening TLS...")
 			err = s.runTLS()
 			return
 		}
+		s.logger.Printf("Starting server at: %s", s.httpServer.Addr)
 		err = s.httpServer.ListenAndServe()
 	}()
 
@@ -117,6 +118,7 @@ func (s *Server) runTLS() error {
 		}),
 	}
 	go func() { log.Fatal(srv.ListenAndServe()) }()
+	s.httpServer.Addr = ":443"
 	return s.httpServer.ListenAndServeTLS(s.certFile, s.keyFile)
 }
 
