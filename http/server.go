@@ -37,6 +37,19 @@ func NewServer(opts ...ServerOption) *Server {
 		o(&srv)
 	}
 
+	var hf HandlerFunc
+	h := srv.httpServer.Handler
+
+	hf = func(c context.Context, w http.ResponseWriter, r *http.Request) {
+		h.ServeHTTP(w, r.WithContext(c))
+	}
+
+	for _, apt := range srv.adapters {
+		hf = apt(hf)
+	}
+
+	srv.httpServer.Handler = hf
+
 	if srv.logger == nil {
 		srv.logger = log.New(os.Stdout, "kit/http => ", log.Ldate|log.Ltime|log.Llongfile)
 	}
@@ -155,14 +168,13 @@ func (s *Server) RegisterService(svc Service) error {
 
 	for path, endpoint := range endpoints {
 		hfunc := endpoint.Handler
-		hfunc = AdaptHandlerFunc(hfunc, s.adapters...)
 
 		route := s.mux.HandleFunc(
 			s.getPath(path, svc.Prefix()),
 			func(w http.ResponseWriter, r *http.Request) {
 				// TODO - Provide a sensible default context
 				// eg. timeouts, values ???
-				hfunc(context.Background(), w, r)
+				hfunc(r.Context(), w, r)
 			},
 		)
 

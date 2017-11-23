@@ -175,12 +175,12 @@ func TestResponsesAndAdapters(t *testing.T) {
 
 			ch := make(chan struct{})
 			go func(i int) {
-				s.Run(8000 + i)
+				s.Run(9000 + i)
 				ch <- struct{}{}
 			}(i)
 
 			body, _ := json.Marshal(c.req)
-			url := fmt.Sprintf("http://localhost:%d%s", 8000+i, c.path)
+			url := fmt.Sprintf("http://localhost:%d%s", 9000+i, c.path)
 			var client *gohttp.Client = gohttp.DefaultClient
 			if c.sslEnabled {
 				url = fmt.Sprintf("https://localhost%s", c.path)
