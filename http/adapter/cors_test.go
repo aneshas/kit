@@ -31,7 +31,7 @@ func TestWithCORS(t *testing.T) {
 			origins:     []string{"*"},
 			wantOrigins: "*",
 			wantMethods: "GET, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH",
-			wantHeaders: "Accept, Accept-Language, Content-Language, Content-Type",
+			wantHeaders: "Authorization, Accept, Accept-Language, Content-Language, Content-Type",
 		},
 		{
 			name:        "test origin",
@@ -40,7 +40,7 @@ func TestWithCORS(t *testing.T) {
 			wantOrigins: "foobar.com",
 			host:        "foobar.com",
 			wantMethods: "GET, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH",
-			wantHeaders: "Accept, Accept-Language, Content-Language, Content-Type",
+			wantHeaders: "Authorization, Accept, Accept-Language, Content-Language, Content-Type",
 		},
 		{
 			name:        "test origins",
@@ -49,7 +49,7 @@ func TestWithCORS(t *testing.T) {
 			wantOrigins: "foobar.com",
 			host:        "foobar.com",
 			wantMethods: "GET, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH",
-			wantHeaders: "Accept, Accept-Language, Content-Language, Content-Type",
+			wantHeaders: "Authorization, Accept, Accept-Language, Content-Language, Content-Type",
 		},
 		{
 			name:        "test asterisk origin override",
@@ -58,14 +58,14 @@ func TestWithCORS(t *testing.T) {
 			wantOrigins: "*",
 			host:        "foobar.com",
 			wantMethods: "GET, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH",
-			wantHeaders: "Accept, Accept-Language, Content-Language, Content-Type",
+			wantHeaders: "Authorization, Accept, Accept-Language, Content-Language, Content-Type",
 		},
 		{
 			name:        "test methods",
 			wantMaxAge:  "3600",
 			methods:     []string{"GET", "post", "PUT"},
 			wantMethods: "GET, POST, PUT",
-			wantHeaders: "Accept, Accept-Language, Content-Language, Content-Type",
+			wantHeaders: "Authorization, Accept, Accept-Language, Content-Language, Content-Type",
 		},
 		{
 			name:        "test headers",
@@ -79,7 +79,7 @@ func TestWithCORS(t *testing.T) {
 			maxAge:      86400,
 			wantMaxAge:  "86400",
 			wantMethods: "GET, POST, PUT, DELETE, CONNECT, OPTIONS, TRACE, PATCH",
-			wantHeaders: "Accept, Accept-Language, Content-Language, Content-Type",
+			wantHeaders: "Authorization, Accept, Accept-Language, Content-Language, Content-Type",
 		},
 		{
 			name:        "test non options origin",
