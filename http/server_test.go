@@ -6,6 +6,7 @@ import (
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
+	"log"
 	gohttp "net/http"
 	"testing"
 
@@ -189,8 +190,14 @@ func TestResponsesAndAdapters(t *testing.T) {
 				}
 				client = &gohttp.Client{Transport: tr}
 			}
-			req, _ := gohttp.NewRequest(c.verb, url, bytes.NewReader(body))
-			rsp, _ := client.Do(req)
+			req, err := gohttp.NewRequest(c.verb, url, bytes.NewReader(body))
+			if err != nil {
+				log.Fatal(err)
+			}
+			rsp, err := client.Do(req)
+			if err != nil {
+				log.Fatal(err)
+			}
 			jresp := response{}
 			json.NewDecoder(rsp.Body).Decode(&jresp)
 

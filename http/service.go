@@ -30,13 +30,13 @@ func (b *BaseService) Prefix() string { return "/" }
 // RegisterHandler is a helper method that registers service HandlerFunc
 // Service HandlerFunc is an extension of http.HandlerFunc which only adds context.Context
 // as first parameter, the rest stays the same
-func (b *BaseService) RegisterHandler(verb string, path string, h HandlerFunc) {
+func (b *BaseService) RegisterHandler(verb string, path string, h HandlerFunc, a ...Adapter) {
 	if b.endpoints == nil {
 		b.endpoints = make(map[string]*Endpoint)
 	}
 	b.endpoints[path] = &Endpoint{
 		Methods: []string{verb},
-		Handler: h,
+		Handler: AdaptHandlerFunc(h, a...),
 	}
 }
 
@@ -45,7 +45,7 @@ func (b *BaseService) RegisterHandler(verb string, path string, h HandlerFunc) {
 // func(c context.Context, w http.ResponseWriter, req *CustomType) (*http.Response, error)
 // where *CustomType is your custom request type to which r.Body will be json unmarshalled automatically
 // *http.Response can be omitted if endpoint has no reasonable response, error is always required however
-func (b *BaseService) RegisterEndpoint(verb string, path string, method interface{}) error {
+func (b *BaseService) RegisterEndpoint(verb string, path string, method interface{}, a ...Adapter) error {
 	h, err := b.handlerFromMethod(method)
 	if err != nil {
 		return err
@@ -57,7 +57,7 @@ func (b *BaseService) RegisterEndpoint(verb string, path string, method interfac
 
 	b.endpoints[path] = &Endpoint{
 		Methods: []string{verb},
-		Handler: h,
+		Handler: AdaptHandlerFunc(h, a...),
 	}
 
 	return nil

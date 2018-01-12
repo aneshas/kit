@@ -46,7 +46,7 @@ func WithCORS(opts ...CORSOption) http.Adapter {
 
 				headers := cfg.headers
 				if headers == "" {
-					headers = "Accept, Accept-Language, Content-Language, Content-Type"
+					headers = "Authorization, Accept, Accept-Language, Content-Language, Content-Type"
 				}
 				w.Header().Add("Access-Control-Allow-Headers", headers)
 
