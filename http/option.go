@@ -32,9 +32,9 @@ func WithTLSConfig(cert, key string) ServerOption {
 	}
 }
 
-// WithDefaultHandler represents server option for setting default
-// http server handler which by default is gorilla mux router
-func WithDefaultHandler(h http.Handler) ServerOption {
+// WithMux represents server option for setting a custom router.
+// gorilla/mux is used as default
+func WithMux(h http.Handler) ServerOption {
 	return func(s *Server) {
 		s.httpServer.Handler = h
 	}
