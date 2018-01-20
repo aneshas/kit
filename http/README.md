@@ -27,6 +27,7 @@ server := http.NewServer(
   http.WithMux(customMux), // Override default gorilla mux router
   http.WithNotFoundHandler(notFoundHdlr),
   http.WithAdapters(
+    adapter.WithRequestLogger(logger),
     adapter.WithCORS(
       adapter.WithCORSAllowOrigins("*"),
       adapter.WithCORSAllowMethods("PUT", "DELETE"),

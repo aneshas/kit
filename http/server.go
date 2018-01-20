@@ -8,10 +8,20 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"reflect"
 	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
+)
+
+const (
+	rColor = "\x1b[31;1m"
+	gColor = "\x1b[32;1m"
+	yColor = "\x1b[33;1m"
+	bColor = "\x1b[34;1m"
+	wColor = "\x1b[37;1m"
+	nColor = "\x1b[0m"
 )
 
 // NewServer creates new http server instance
@@ -90,11 +100,13 @@ func (s *Server) Run(port int) error {
 
 	go func() {
 		if s.tlsEnabled() {
-			s.logger.Println("Listening TLS...")
+			s.logger.Printf("%sListening TLS...%s", rColor, nColor)
+			s.logger.Println("")
 			err = s.runTLS()
 			return
 		}
-		s.logger.Printf("Starting server at: %s", s.httpServer.Addr)
+		s.logger.Printf("%sServer listening on: %s%s%s", rColor, gColor, s.httpServer.Addr, nColor)
+		s.logger.Println("")
 		err = s.httpServer.ListenAndServe()
 	}()
 
@@ -104,14 +116,14 @@ func (s *Server) Run(port int) error {
 		return err
 	}
 
-	s.logger.Println("Server shutting down...")
+	s.logger.Printf("%sServer shutting down...%s", rColor, nColor)
 
 	e := s.httpServer.Shutdown(context.Background())
 	if e != nil {
 		return e
 	}
 
-	s.logger.Println("Server stopped.")
+	s.logger.Printf("%sServer stopped.%s", rColor, nColor)
 
 	return nil
 }
@@ -166,7 +178,18 @@ func (s *Server) RegisterService(svc Service) error {
 		return fmt.Errorf("service has no endpoints defined")
 	}
 
+	st := reflect.ValueOf(svc).Elem().Type()
+	s.logger.Printf(
+		"%sREGISTERING %s%s:%s%s %s%s",
+		wColor,
+		bColor, st.PkgPath(),
+		yColor, st.Name(),
+		wColor,
+		nColor,
+	)
+
 	for path, endpoint := range endpoints {
+		s.printRouteInfo(svc, path, endpoint)
 		hfunc := endpoint.Handler
 
 		route := s.mux.HandleFunc(
@@ -183,7 +206,18 @@ func (s *Server) RegisterService(svc Service) error {
 		}
 	}
 
+	s.logger.Println("")
+
 	return nil
+}
+
+func (s *Server) printRouteInfo(svc Service, path string, ep *Endpoint) {
+	s.logger.Printf(
+		"%s%s %s/%s %s",
+		yColor, strings.Join(ep.Methods, ","),
+		gColor, svc.Prefix()+path,
+		nColor,
+	)
 }
 
 func (s *Server) getPath(path string, prefix string) string {
