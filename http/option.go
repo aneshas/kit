@@ -3,6 +3,7 @@ package http
 import (
 	"log"
 	"net/http"
+	"time"
 )
 
 // ServerOption is used for setting up
@@ -45,6 +46,21 @@ func WithMux(h http.Handler) ServerOption {
 func WithNotFoundHandler(h http.Handler) ServerOption {
 	return func(s *Server) {
 		s.notFoundHandler = h
+	}
+}
+
+// WithWriteTimeout sets http server write timeout
+func WithWriteTimeout(d time.Duration) ServerOption {
+
+	return func(s *Server) {
+		s.writeTimeout = d
+	}
+}
+
+// WithReadTimeout sets http server read timeout
+func WithReadTimeout(d time.Duration) ServerOption {
+	return func(s *Server) {
+		s.readTimeout = d
 	}
 }
 

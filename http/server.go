@@ -28,12 +28,12 @@ const (
 func NewServer(opts ...ServerOption) *Server {
 	srv := Server{
 		httpServer: &http.Server{
-			ReadTimeout:  5 * time.Second,
-			WriteTimeout: 10 * time.Second,
-			IdleTimeout:  120 * time.Second,
+			IdleTimeout: 120 * time.Second,
 		},
-		stop: make(chan os.Signal, 1),
-		mux:  mux.NewRouter().StrictSlash(true),
+		stop:         make(chan os.Signal, 1),
+		mux:          mux.NewRouter().StrictSlash(true),
+		readTimeout:  5 * time.Second,
+		writeTimeout: 10 * time.Second,
 	}
 
 	if srv.notFoundHandler != nil {
@@ -46,6 +46,9 @@ func NewServer(opts ...ServerOption) *Server {
 	for _, o := range opts {
 		o(&srv)
 	}
+
+	srv.httpServer.WriteTimeout = srv.writeTimeout
+	srv.httpServer.ReadTimeout = srv.readTimeout
 
 	var hf HandlerFunc
 	h := srv.httpServer.Handler
@@ -87,6 +90,8 @@ type Server struct {
 	mux             *mux.Router
 	notFoundHandler http.Handler
 	stop            chan os.Signal
+	writeTimeout    time.Duration
+	readTimeout     time.Duration
 }
 
 // Run will start a server listening on a given port
