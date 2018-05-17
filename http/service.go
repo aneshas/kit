@@ -151,7 +151,7 @@ func (b *BaseService) decodeReq(r *http.Request, m interface{}) (interface{}, er
 
 	err := json.NewDecoder(r.Body).Decode(req)
 	if err != nil {
-		return nil, fmt.Errorf("error decoding json")
+		return nil, fmt.Errorf("error decoding json: %v", err)
 	}
 
 	return req, nil
