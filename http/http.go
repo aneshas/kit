@@ -7,6 +7,9 @@ import (
 	"net/http"
 )
 
+// ContextKey is a context key type
+type ContextKey string
+
 // Service defines http service interface
 type Service interface {
 	Prefix() string
@@ -22,7 +25,8 @@ type Endpoint struct {
 // HandlerFunc represents kit http handler func
 type HandlerFunc func(context.Context, http.ResponseWriter, *http.Request)
 
-// ServeHTTP implements http.Handler for HandlerFunc
+// ServeHTTP implements http.Handler for HandlerFunc so it can be chained
+// with third party middleware
 func (hf HandlerFunc) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	hf(context.Background(), w, r)
 }

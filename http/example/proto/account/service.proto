@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+package kithttp.example.account;
+
+option go_package = "account";
+
+service Account {
+    rpc Profile(ProfileReq) returns (ProfileResp);
+}
+
+message ProfileReq {
+    // Required
+    string id = 1;
+}
+
+message ProfileResp {
+    string name = 1;
+    string email = 2;
+    string address = 3;
+}

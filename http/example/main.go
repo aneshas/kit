@@ -25,6 +25,10 @@ func main() {
 	reqlog := adapter.WithRequestLogger(logger, true)
 
 	server.MustRegisterServices(
+		// Kit HTTP Twirp Service
+		NewAccountService(),
+
+		// Kit HTTP Services
 		NewOrderService(reqlog),
 		NewCustomerService(reqlog),
 	)

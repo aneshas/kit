@@ -3,7 +3,7 @@
 Package http provides server implementation with lifecycle control, graceful shutdown, commonly used 
 adapters, easy service registration and response/error handling, endpoints implementation, tls support...
 
-See the [example](example/) package for example usage.
+See the [example](example/) package for example usage and to see how you can integrate twirp.
 
 # Creating and running the server
 With minimal setup:
