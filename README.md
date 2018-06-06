@@ -10,8 +10,5 @@
 This package contains common packages used accross server based projects
 
 # Packages included
-## http
-[Link to package](http/)
-
-HTTP server implementation with server lifecycle control, commonly used 
-adapters, easy service registration and response/error handling, tls support...
+* [http](http/) - http server implementation with server lifecycle control, commonly used 
+adapters, easy service registration and response/error handling, gracefull shutdown, tls support...
