@@ -40,6 +40,13 @@ func (b *BaseService) RegisterHandler(verb string, path string, h HandlerFunc, a
 	}
 }
 
+// MustRegisterEndpoint panic version of RegisterEndpoint
+func (b *BaseService) MustRegisterEndpoint(verb string, path string, method interface{}, a ...Adapter) {
+	if err := b.RegisterEndpoint(verb, path, method, a...); err != nil {
+		panic(err)
+	}
+}
+
 // RegisterEndpoint is a helper method that registers service json endpoint
 // JSON endpoint method should have the following signature:
 // func(c context.Context, w http.ResponseWriter, req *CustomType) (*http.Response, error)

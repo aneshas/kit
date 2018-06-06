@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	ghttp "net/http"
 
 	"github.com/gorilla/mux"
@@ -12,24 +11,15 @@ import (
 )
 
 // NewCustomerService creates new customer service
-func NewCustomerService(logger *log.Logger) *Customer {
-	svc := Customer{
-		logger: logger,
-	}
-
-	svc.Adapt(
-		WithRequestLogger(logger),
-	)
+func NewCustomerService(apts ...http.Adapter) *Customer {
+	svc := Customer{}
 
 	svc.RegisterHandler("GET", "/details/{id}", svc.details)
 	svc.RegisterEndpoint("PUT", "/update", svc.update)
 
-	// If having problems accessing your endpoint you might
-	// want to check err to see if you have endpoint validation issues
-	err := svc.RegisterEndpoint("POST", "/create", svc.create)
-	if err != nil {
-		log.Fatal(err)
-	}
+	svc.MustRegisterEndpoint("POST", "/create", svc.create)
+
+	svc.Adapt(apts...)
 
 	return &svc
 }
@@ -37,8 +27,6 @@ func NewCustomerService(logger *log.Logger) *Customer {
 // Customer represents customer http service
 type Customer struct {
 	http.BaseService
-
-	logger *log.Logger
 }
 
 // Prefix returns service routing prefix

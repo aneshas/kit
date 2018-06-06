@@ -22,9 +22,11 @@ func main() {
 		),
 	)
 
-	server.RegisterServices(
-		NewOrderService(logger),
-		NewCustomerService(logger),
+	reqlog := adapter.WithRequestLogger(logger, true)
+
+	server.MustRegisterServices(
+		NewOrderService(reqlog),
+		NewCustomerService(reqlog),
 	)
 
 	log.Fatal(server.Run(8080))

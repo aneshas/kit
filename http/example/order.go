@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	ghttp "net/http"
 
 	"github.com/gorilla/mux"
@@ -13,21 +12,17 @@ import (
 )
 
 // NewOrderService creates new order service
-func NewOrderService(logger *log.Logger) *Order {
-	svc := Order{
-		logger: logger,
-	}
-
-	svc.Adapt(
-		WithRequestLogger(logger),
-	)
+func NewOrderService(apts ...http.Adapter) *Order {
+	svc := Order{}
 
 	// Normal handler where you handle request decoding and validation
-	svc.RegisterHandler("GET", "/details{id}", svc.details)
+	svc.RegisterHandler("GET", "/details/{id}", svc.details)
 
 	// Register json endpoint which handles automatic validation, request
 	// decoding and easy to use return based response
-	svc.RegisterEndpoint("POST", "/create", svc.create)
+	svc.MustRegisterEndpoint("POST", "/create", svc.create)
+
+	svc.Adapt(apts...)
 
 	return &svc
 }
@@ -35,8 +30,6 @@ func NewOrderService(logger *log.Logger) *Order {
 // Order represents order http service
 type Order struct {
 	http.BaseService
-
-	logger *log.Logger
 }
 
 // Prefix returns service routing prefix

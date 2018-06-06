@@ -94,6 +94,13 @@ type Server struct {
 	readTimeout     time.Duration
 }
 
+// MustRun panic version of Run
+func (s *Server) MustRun(port int) {
+	if err := s.Run(port); err != nil {
+		panic(err)
+	}
+}
+
 // Run will start a server listening on a given port
 func (s *Server) Run(port int) error {
 	addr := fmt.Sprintf("0.0.0.0:%d", port)
@@ -157,6 +164,13 @@ func (s *Server) Stop() {
 	s.stop <- os.Interrupt
 }
 
+// MustRegisterServices panic version of RegisterServices
+func (s *Server) MustRegisterServices(svcs ...Service) {
+	if err := s.RegisterServices(svcs...); err != nil {
+		panic(err)
+	}
+}
+
 // RegisterServices registers given http Services with
 // the server and sets up routes
 func (s *Server) RegisterServices(svcs ...Service) error {
@@ -172,6 +186,13 @@ func (s *Server) RegisterServices(svcs ...Service) error {
 	}
 
 	return nil
+}
+
+// MustRegisterService panic version of RegisterService
+func (s *Server) MustRegisterService(svc Service) {
+	if err := s.RegisterService(svc); err != nil {
+		panic(err)
+	}
 }
 
 // RegisterService registers a given http Service with
@@ -200,8 +221,6 @@ func (s *Server) RegisterService(svc Service) error {
 		route := s.mux.HandleFunc(
 			s.getPath(path, svc.Prefix()),
 			func(w http.ResponseWriter, r *http.Request) {
-				// TODO - Provide a sensible default context
-				// eg. timeouts, values ???
 				hfunc(r.Context(), w, r)
 			},
 		)
