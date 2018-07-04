@@ -12,14 +12,6 @@ import (
 	"github.com/tonto/kit/http"
 )
 
-const (
-	gColor = "\x1b[32;1m"
-	yColor = "\x1b[33;1m"
-	bColor = "\x1b[34;1m"
-	wColor = "\x1b[37;1m"
-	nColor = "\x1b[0m"
-)
-
 type logMessage struct {
 	RemoteAddr string  `json:"remote_addr"`
 	Method     string  `json:"method"`
