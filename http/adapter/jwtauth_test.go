@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/tonto/kit/http"
 	"github.com/tonto/kit/http/adapter"
 	"github.com/tonto/kit/http/respond"
 )
@@ -78,7 +79,7 @@ func TestWithJWTAuth(t *testing.T) {
 			key:   []byte("123456"),
 			token: "",
 			want: response{
-				Code:   400,
+				Code:   401,
 				Errors: []string{"no authorization header found"},
 			},
 		},
@@ -89,7 +90,7 @@ func TestWithJWTAuth(t *testing.T) {
 			key:    []byte("123456"),
 			token:  "",
 			want: response{
-				Code:   400,
+				Code:   401,
 				Errors: []string{"no bearer token found"},
 			},
 		},
@@ -112,7 +113,7 @@ func TestWithJWTAuth(t *testing.T) {
 			key:    []byte("123456"),
 			token:  "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJPbmxpbmUgSldUIEJ1aWxkZXIiLCJpYXQiOjE1MDkzNzczMDEsImV4cCI6MTU0MDkxMzMwMSwiYXVkIjoid3d3LmV4YW1wbGUuY29tIiwic3ViIjoianJvY2tldEBleGFtcGxlLmNvbSIsIkdpdmVuTmFtZSI6IkpvaG5ueSIsIlN1cm5hbWUiOiJSb2NrZXQiLCJFbWFpbCI6Impyb2NrZXRAZXhhbXBsZS5jb20iLCJSb2xlIjpbIk1hbmFnZXIiLCJQcm9qZWN0IEFkbWluaXN0cmF0b3IiXX0.pQnK-DKhBGOMig8dDvQztdWkKl51mhvJeZujoHjAoXCYFPv6UJlw19RlCczoqmqqsK2fAjYnDgUiYGDSvhISmw",
 			want: response{
-				Code:   400,
+				Code:   401,
 				Errors: []string{"could not parse provided token"},
 			},
 		},
@@ -142,7 +143,7 @@ func TestWithJWTAuth(t *testing.T) {
 			)
 
 			hdlr := apt(func(ctx context.Context, w gohttp.ResponseWriter, r *gohttp.Request) {
-				respond.WithJSON(w, r, ctx.Value(adapter.JWTTokenKey).(string))
+				respond.WithJSON(w, r, ctx.Value(http.ContextKey(adapter.JWTTokenKey)).(string))
 			})
 
 			req, _ := gohttp.NewRequest("GET", "/", nil)
