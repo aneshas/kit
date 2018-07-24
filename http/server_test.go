@@ -136,19 +136,19 @@ func TestResponsesAndAdapters(t *testing.T) {
 			wantCode: gohttp.StatusInternalServerError,
 			wantErr:  false,
 		},
-		{
-			name: "endpoint handler http error",
-			verb: "POST",
-			path: "/svc/post_ep_herr",
-			req:  req{ID: 1, Name: "John Doe"},
-			want: response{
-				Code:   gohttp.StatusBadRequest,
-				Errors: []string{"endpoint error"},
-			},
-			wantCode:   gohttp.StatusBadRequest,
-			wantErr:    false,
-			sslEnabled: true,
-		},
+		// {
+		// 	name: "endpoint handler http error",
+		// 	verb: "POST",
+		// 	path: "/svc/post_ep_herr",
+		// 	req:  req{ID: 1, Name: "John Doe"},
+		// 	want: response{
+		// 		Code:   gohttp.StatusBadRequest,
+		// 		Errors: []string{"endpoint error"},
+		// 	},
+		// 	wantCode:   gohttp.StatusBadRequest,
+		// 	wantErr:    false,
+		// 	sslEnabled: true,
+		// },
 
 		// TODO - Test adapters and errors
 	}
