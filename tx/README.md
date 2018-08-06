@@ -71,7 +71,7 @@ See [example](example/) package for a full example implementation.
 Ultimately you want to use it inside of your application service use case, eg:
 
 ```Go
-svc.accounts.RunTx(
+svc.RunTx(
 	ctx,
 	// This func will be run in a transaction
 	// It is crucial for you to use the context provided by the
