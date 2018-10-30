@@ -32,7 +32,7 @@ func TestTreeWalk(t *testing.T) {
 			})
 
 			log.Println(tree)
-			t.Fail()
+			// t.Fail()
 		})
 	}
 }
