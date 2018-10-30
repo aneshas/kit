@@ -1,0 +1,123 @@
+{
+    "app": {
+        "name": ".",
+        "t": 0,
+        "nodes": [
+            {
+                "name": "cmd",
+                "t": 0,
+                "nodes": [
+                    {
+                        "name": "{{.Name}}",
+                        "t": 0,
+                        "nodes": [
+                            {
+                                "name": "main.go",
+                                "t": 1,
+                                "meta": {
+                                    "template": "service_main.go.tpl"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "proto",
+                "t": 0,
+                "nodes": [
+                    {
+                        "name": "{{.Name}}",
+                        "t": 0,
+                        "nodes": [
+                            {
+                                "name": "{{.Name}}.proto",
+                                "t": 1,
+                                "meta": {
+                                    "template": "service.proto"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "service",
+                "t": 0,
+                "nodes": [
+                    {
+                        "name": "{{.Name}}",
+                        "t": 0,
+                        "nodes": [
+                            {
+                                "name": "{{.Name}}.go",
+                                "t": 1,
+                                "meta": {
+                                    "template": "service.go"
+                                }
+                            },
+                            {
+                                "name": "transport",
+                                "t": 0,
+                                "nodes": [
+                                    {
+                                        "name": "{{.Name}}.go",
+                                        "t": 1,
+                                        "meta": {
+                                            "twirp_template": "twirp_transport.go",
+                                            "feature": "transport"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "metrics",
+                                "t": 0,
+                                "nodes": [
+                                    {
+                                        "name": "{{.Name}}.go",
+                                        "t": 1,
+                                        "meta": {
+                                            "prometheus_template": "prometheus_metrics.go",
+                                            "feature": "metrics"
+                                        }
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "logging",
+                                "t": 0,
+                                "nodes": [
+                                    {
+                                        "name": "{{.Name}}.go",
+                                        "t": 1,
+                                        "meta": {
+                                            "template": "logging.go",
+                                            "feature": "logging"
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "openapi",
+                "t": 0,
+                "nodes": [
+                    {
+                        "name": "proto",
+                        "t": 0,
+                        "nodes": [
+                            {
+                                "name": "{{.Name}}",
+                                "t": 0
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}

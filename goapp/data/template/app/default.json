@@ -1,0 +1,28 @@
+{
+    "app": {
+        "name": "{{.Name}}",
+        "t": 0,
+        "nodes": [
+            {
+                "name": "cmd",
+                "t": 0
+            },
+            {
+                "name": "proto",
+                "t": 0
+            },
+            {
+                "name": "service",
+                "t": 0
+            },
+            {
+                "name": "openapi",
+                "t": 0
+            },
+            {
+                "name": "README.md",
+                "t": 1
+            }
+        ]
+    }
+}

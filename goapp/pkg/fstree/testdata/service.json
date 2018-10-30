@@ -1,0 +1,111 @@
+{
+    "app": {
+        "name": "{{app}}",
+        "t": 0,
+        "nodes": [
+            {
+                "name": "cmd",
+                "t": 0,
+                "nodes": [
+                    {
+                        "name": "{{svc}}",
+                        "t": 0,
+                        "nodes": [
+                            {
+                                "name": "main.go",
+                                "t": 1,
+                                "meta": {
+                                    "template": "service/service_main.go.tpl"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "proto",
+                "t": 0,
+                "nodes": [
+                    {
+                        "name": "{{svc}}",
+                        "t": 0,
+                        "nodes": [
+                            {
+                                "name": "{{svc}}.proto",
+                                "t": 1,
+                                "meta": {
+                                    "template": "service/service.proto.tpl"
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "service",
+                "t": 0,
+                "nodes": [
+                    {
+                        "name": "{{svc}}",
+                        "t": 0,
+                        "nodes": [
+                            {
+                                "name": "{{svc}}.go",
+                                "t": 1,
+                                "meta": {
+                                    "template": "service/service.go.tpl"
+                                }
+                            },
+                            {
+                                "name": "transport",
+                                "t": 0,
+                                "nodes": [
+                                    {
+                                        "name": "{{svc}}.go",
+                                        "t": 1
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "metrics",
+                                "t": 0,
+                                "nodes": [
+                                    {
+                                        "name": "{{svc}}.go",
+                                        "t": 1
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "logging",
+                                "t": 0,
+                                "nodes": [
+                                    {
+                                        "name": "{{svc}}.go",
+                                        "t": 1
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            },
+            {
+                "name": "openapi",
+                "t": 0,
+                "nodes": [
+                    {
+                        "name": "proto",
+                        "t": 0,
+                        "nodes": [
+                            {
+                                "name": "{{svc}}",
+                                "t": 0
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}
