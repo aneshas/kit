@@ -96,7 +96,7 @@ func (os *OrderService) create(c context.Context, w ghttp.ResponseWriter, r *ght
 See the [respond](respond/) package for more info on it's usage.
 
 ### Endpoints
-Endpoints however, are specificaly designed to be used for json api endpoints.
+Endpoints however, are specifically designed to be used for json api endpoints.
 They provide easy request decoding and response encoding.
 
 Endpoint is a func of the following signature:
